@@ -132,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.4),
+              color: AppTheme.primaryColor.withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -144,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Icon(
@@ -175,14 +175,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'v1.0.0',
                       style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -231,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentColor.withOpacity(0.12),
+                          color: AppTheme.accentColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(
@@ -369,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       side: BorderSide(
-                        color: AppTheme.accentColor.withOpacity(0.3),
+                        color: AppTheme.accentColor.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -433,7 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -535,7 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.accentColor,
+            activeThumbColor: AppTheme.accentColor,
           ),
         ],
       ),
@@ -604,7 +604,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -688,7 +688,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withOpacity(0.1),
+                  color: AppTheme.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, size: 20, color: AppTheme.errorColor),
@@ -714,7 +714,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: AppTheme.errorColor.withOpacity(0.5),
+                color: AppTheme.errorColor.withValues(alpha: 0.5),
               ),
             ],
           ),

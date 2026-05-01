@@ -97,7 +97,7 @@ class AppTheme {
         elevation: 0,
         height: 65,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        indicatorColor: accentColor.withOpacity(0.15),
+        indicatorColor: accentColor.withValues(alpha: 0.15),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(
@@ -181,7 +181,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          side: BorderSide(color: primaryColor.withOpacity(0.3)),
+          side: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
           textStyle: TextStyle(
             fontFamily: 'NotoSansSC',
             fontSize: 16,
@@ -203,7 +203,7 @@ class AppTheme {
       // Chip主题
       chipTheme: ChipThemeData(
         backgroundColor: Colors.white,
-        selectedColor: accentColor.withOpacity(0.2),
+        selectedColor: accentColor.withValues(alpha: 0.2),
         labelStyle: TextStyle(
           fontFamily: 'NotoSansSC',
           fontSize: 13,
@@ -368,7 +368,7 @@ class AppTheme {
         backgroundColor: Color(0xFF1E1E2E),
         elevation: 0,
         height: 65,
-        indicatorColor: accentColor.withOpacity(0.2),
+        indicatorColor: accentColor.withValues(alpha: 0.2),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return TextStyle(

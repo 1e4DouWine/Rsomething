@@ -123,7 +123,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -195,7 +195,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         elevation: isSelected ? 2 : 0,
-        shadowColor: isSelected ? color.withOpacity(0.3) : Colors.transparent,
+        shadowColor: isSelected ? color.withValues(alpha: 0.3) : Colors.transparent,
       ),
     );
   }
@@ -266,7 +266,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.accentColor.withOpacity(0.1),
+                color: AppTheme.accentColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -502,7 +502,7 @@ class _AddContentSheetState extends State<AddContentSheet>
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -537,7 +537,7 @@ class _AddContentSheetState extends State<AddContentSheet>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withOpacity(0.1),
+                  color: AppTheme.accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -605,13 +605,13 @@ class _AddContentSheetState extends State<AddContentSheet>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.accentColor,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: AppTheme.accentColor.withOpacity(0.6),
+                disabledBackgroundColor: AppTheme.accentColor.withValues(alpha: 0.6),
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
                 elevation: _isAnalyzing ? 0 : 4,
-                shadowColor: AppTheme.accentColor.withOpacity(0.4),
+                shadowColor: AppTheme.accentColor.withValues(alpha: 0.4),
               ),
               child: _isAnalyzing
                   ? Row(
@@ -763,7 +763,7 @@ class MemoryDetailDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: typeColor.withOpacity(0.1),
+                    color: typeColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Icon(
@@ -905,10 +905,10 @@ class MemoryDetailDialog extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.05),
+            color: typeColor.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: typeColor.withOpacity(0.2),
+              color: typeColor.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -923,7 +923,7 @@ class MemoryDetailDialog extends StatelessWidget {
                     SizedBox(
                       width: 80,
                       child: Text(
-                        '${entry.key}',
+                        entry.key,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppTheme.textSecondary,
                           fontWeight: FontWeight.w500,

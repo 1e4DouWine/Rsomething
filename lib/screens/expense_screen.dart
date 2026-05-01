@@ -108,7 +108,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.billColor.withOpacity(0.1),
+                color: AppTheme.billColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -133,7 +133,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -224,7 +224,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.4),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -236,7 +236,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   '本月支出',
                   style: TextStyle(
                     fontFamily: 'NotoSansSC',
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -267,7 +267,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          Colors.white.withOpacity(0.3),
+                          Colors.white.withValues(alpha: 0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -307,7 +307,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.4),
+                    color: color.withValues(alpha: 0.4),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -342,7 +342,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -371,7 +371,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
@@ -408,7 +408,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: percentage / 100,
-                              backgroundColor: color.withOpacity(0.12),
+                              backgroundColor: color.withValues(alpha: 0.12),
                               valueColor: AlwaysStoppedAnimation<Color>(color),
                               minHeight: 6,
                             ),
@@ -439,7 +439,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppTheme.billColor.withOpacity(0.1),
+                    color: AppTheme.billColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -488,7 +488,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -499,7 +499,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(

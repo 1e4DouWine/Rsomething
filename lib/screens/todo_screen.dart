@@ -118,7 +118,7 @@ class _TodoScreenState extends State<TodoScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -157,7 +157,7 @@ class _TodoScreenState extends State<TodoScreen>
             gradient: LinearGradient(
               colors: [
                 AppTheme.todoColor,
-                AppTheme.todoColor.withOpacity(0.8),
+                AppTheme.todoColor.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -165,7 +165,7 @@ class _TodoScreenState extends State<TodoScreen>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.todoColor.withOpacity(0.3),
+                color: AppTheme.todoColor.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -185,7 +185,7 @@ class _TodoScreenState extends State<TodoScreen>
                       height: 80,
                       child: CircularProgressIndicator(
                         value: progress,
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                         strokeWidth: 8,
                         strokeCap: StrokeCap.round,
@@ -235,7 +235,7 @@ class _TodoScreenState extends State<TodoScreen>
                       '已完成 / 总计',
                       style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -281,7 +281,7 @@ class _TodoScreenState extends State<TodoScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.todoColor.withOpacity(0.1),
+                color: AppTheme.todoColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -387,7 +387,7 @@ class _TodoScreenState extends State<TodoScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -481,7 +481,7 @@ class _TodoScreenState extends State<TodoScreen>
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.errorColor.withOpacity(0.1),
+                                    color: AppTheme.errorColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -553,7 +553,7 @@ class _TodoScreenState extends State<TodoScreen>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.todoColor.withOpacity(0.1),
+                      color: AppTheme.todoColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -728,7 +728,7 @@ class _TodoScreenState extends State<TodoScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   elevation: 4,
-                  shadowColor: AppTheme.todoColor.withOpacity(0.4),
+                  shadowColor: AppTheme.todoColor.withValues(alpha: 0.4),
                 ),
                 child: const Text(
                   '添加待办',
@@ -765,7 +765,7 @@ class _TodoScreenState extends State<TodoScreen>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppTheme.todoColor.withOpacity(0.1),
+                      color: AppTheme.todoColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Icon(

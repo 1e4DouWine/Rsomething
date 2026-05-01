@@ -79,7 +79,7 @@ class _MemoryCardState extends State<MemoryCard>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: typeColor.withOpacity(_isPressed ? 0.2 : 0.08),
+                color: typeColor.withValues(alpha: _isPressed ? 0.2 : 0.08),
                 blurRadius: _isPressed ? 16 : 12,
                 offset: Offset(0, _isPressed ? 2 : 4),
               ),
@@ -100,7 +100,7 @@ class _MemoryCardState extends State<MemoryCard>
                         end: Alignment.bottomCenter,
                         colors: [
                           typeColor,
-                          typeColor.withOpacity(0.6),
+                          typeColor.withValues(alpha: 0.6),
                         ],
                       ),
                     ),
@@ -144,7 +144,7 @@ class _MemoryCardState extends State<MemoryCard>
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.12),
+            color: typeColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
@@ -187,10 +187,10 @@ class _MemoryCardState extends State<MemoryCard>
             icon: Icon(
               Icons.delete_outline_rounded,
               size: 20,
-              color: AppTheme.errorColor.withOpacity(0.6),
+              color: AppTheme.errorColor.withValues(alpha: 0.6),
             ),
             style: IconButton.styleFrom(
-              backgroundColor: AppTheme.errorColor.withOpacity(0.08),
+              backgroundColor: AppTheme.errorColor.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -226,10 +226,10 @@ class _MemoryCardState extends State<MemoryCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -293,10 +293,10 @@ class _MemoryCardState extends State<MemoryCard>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: typeColor.withOpacity(0.04),
+        color: typeColor.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: typeColor.withOpacity(0.15),
+          color: typeColor.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -389,7 +389,7 @@ class _MemoryCardState extends State<MemoryCard>
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 2,
-              shadowColor: typeColor.withOpacity(0.3),
+              shadowColor: typeColor.withValues(alpha: 0.3),
             ),
           ),
         ),
