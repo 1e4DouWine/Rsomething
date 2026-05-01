@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/memory.dart';
+import '../theme/app_theme.dart';
 
 /// 记忆卡片组件
-class MemoryCard extends StatelessWidget {
+/// 设计特点: 类型色彩条 + 渐变背景 + 浮动操作按钮
+class MemoryCard extends StatefulWidget {
   final Memory memory;
   final VoidCallback? onTap;
   final VoidCallback? onConfirm;
@@ -20,169 +22,262 @@ class MemoryCard extends StatelessWidget {
   });
 
   @override
+  State<MemoryCard> createState() => _MemoryCardState();
+}
+
+class _MemoryCardState extends State<MemoryCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 12),
-              _buildContent(),
-              const SizedBox(height: 12),
-              _buildStructuredPreview(),
-              if (memory.status == MemoryStatus.pending) ...[
-                const SizedBox(height: 12),
-                _buildActions(context),
-              ],
+    final theme = Theme.of(context);
+    final typeColor = AppTheme.getMemoryTypeColor(widget.memory.type.value);
+
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() => _isPressed = true);
+          _animationController.forward();
+        },
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          _animationController.reverse();
+          widget.onTap?.call();
+        },
+        onTapCancel: () {
+          setState(() => _isPressed = false);
+          _animationController.reverse();
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: typeColor.withOpacity(_isPressed ? 0.2 : 0.08),
+                blurRadius: _isPressed ? 16 : 12,
+                offset: Offset(0, _isPressed ? 2 : 4),
+              ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 左侧类型色彩条
+                  Container(
+                    width: 6,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          typeColor,
+                          typeColor.withOpacity(0.6),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // 主要内容
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(theme, typeColor),
+                          const SizedBox(height: 16),
+                          _buildContent(theme),
+                          if (widget.memory.structuredData.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            _buildStructuredPreview(theme, typeColor),
+                          ],
+                          if (widget.memory.status == MemoryStatus.pending) ...[
+                            const SizedBox(height: 20),
+                            _buildActions(theme, typeColor),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(ThemeData theme, Color typeColor) {
     return Row(
       children: [
-        _buildTypeIcon(),
-        const SizedBox(width: 8),
+        // 类型图标
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: typeColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(
+            _getTypeIcon(widget.memory.type),
+            color: typeColor,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 14),
+        
+        // 类型和时间
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                memory.type.label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                widget.memory.type.label,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
+              const SizedBox(height: 4),
               Text(
-                DateFormat('yyyy-MM-dd HH:mm').format(memory.createdAt),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
+                DateFormat('MM月dd日 HH:mm').format(widget.memory.createdAt),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textTertiary,
                 ),
               ),
             ],
           ),
         ),
-        _buildStatusChip(),
-        if (onDelete != null)
+        
+        // 状态标签
+        _buildStatusChip(theme),
+        
+        // 删除按钮
+        if (widget.onDelete != null)
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 20),
-            onPressed: onDelete,
-            color: Colors.red[300],
+            onPressed: widget.onDelete,
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              size: 20,
+              color: AppTheme.errorColor.withOpacity(0.6),
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: AppTheme.errorColor.withOpacity(0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
       ],
     );
   }
 
-  Widget _buildTypeIcon() {
-    IconData icon;
-    Color color;
-
-    switch (memory.type) {
-      case MemoryType.bill:
-        icon = Icons.receipt_long;
-        color = Colors.orange;
-        break;
-      case MemoryType.todo:
-        icon = Icons.check_circle_outline;
-        color = Colors.blue;
-        break;
-      case MemoryType.event:
-        icon = Icons.event;
-        color = Colors.green;
-        break;
-      case MemoryType.summary:
-        icon = Icons.summarize;
-        color = Colors.purple;
-        break;
-      case MemoryType.unknown:
-        icon = Icons.help_outline;
-        color = Colors.grey;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(icon, color: color, size: 24),
-    );
-  }
-
-  Widget _buildStatusChip() {
+  Widget _buildStatusChip(ThemeData theme) {
     Color color;
     String text;
+    IconData icon;
 
-    switch (memory.status) {
+    switch (widget.memory.status) {
       case MemoryStatus.pending:
-        color = Colors.orange;
+        color = AppTheme.warningColor;
         text = '待处理';
+        icon = Icons.schedule_rounded;
         break;
       case MemoryStatus.confirmed:
-        color = Colors.green;
+        color = AppTheme.successColor;
         text = '已确认';
+        icon = Icons.check_circle_rounded;
         break;
       case MemoryStatus.dismissed:
-        color = Colors.grey;
+        color = AppTheme.textTertiary;
         text = '已忽略';
+        icon = Icons.close_rounded;
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          color: color,
-          fontWeight: FontWeight.w500,
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontFamily: 'NotoSansSC',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
+        color: AppTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Icon(
-            memory.rawContentType == RawContentType.image
-                ? Icons.image
-                : Icons.text_snippet,
-            size: 16,
-            color: Colors.grey[600],
+            widget.memory.rawContentType == RawContentType.image
+                ? Icons.image_rounded
+                : Icons.text_snippet_rounded,
+            size: 18,
+            color: AppTheme.textTertiary,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              memory.rawContentSummary,
+              widget.memory.rawContentSummary,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[800],
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textPrimary,
+                height: 1.5,
               ),
             ),
           ),
@@ -191,47 +286,62 @@ class MemoryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStructuredPreview() {
-    final data = memory.structuredData;
-    if (data.isEmpty) return const SizedBox.shrink();
+  Widget _buildStructuredPreview(ThemeData theme, Color typeColor) {
+    final data = widget.memory.structuredData;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _getTypeColor().withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
+        color: typeColor.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _getTypeColor().withOpacity(0.2),
+          color: typeColor.withOpacity(0.15),
+          width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '识别结果',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                size: 14,
+                color: typeColor,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'AI 识别结果',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: typeColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           ...data.entries.take(3).map((entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.only(bottom: 8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${entry.key}: ',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    entry.key,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     '${entry.value}',
-                    style: const TextStyle(fontSize: 13),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -244,47 +354,61 @@ class MemoryCard extends StatelessWidget {
     );
   }
 
-  Color _getTypeColor() {
-    switch (memory.type) {
-      case MemoryType.bill:
-        return Colors.orange;
-      case MemoryType.todo:
-        return Colors.blue;
-      case MemoryType.event:
-        return Colors.green;
-      case MemoryType.summary:
-        return Colors.purple;
-      case MemoryType.unknown:
-        return Colors.grey;
-    }
-  }
-
-  Widget _buildActions(BuildContext context) {
+  Widget _buildActions(ThemeData theme, Color typeColor) {
     return Row(
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: onDismiss,
-            icon: const Icon(Icons.close, size: 18),
+            onPressed: widget.onDismiss,
+            icon: const Icon(Icons.close_rounded, size: 18),
             label: const Text('忽略'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey[600],
+              foregroundColor: AppTheme.textSecondary,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              side: BorderSide(
+                color: AppTheme.dividerColor,
+                width: 1.5,
+              ),
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: onConfirm,
-            icon: const Icon(Icons.check, size: 18),
+            onPressed: widget.onConfirm,
+            icon: const Icon(Icons.check_rounded, size: 18),
             label: const Text('确认'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
+              backgroundColor: typeColor,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+              shadowColor: typeColor.withOpacity(0.3),
             ),
           ),
         ),
       ],
     );
+  }
+
+  IconData _getTypeIcon(MemoryType type) {
+    switch (type) {
+      case MemoryType.bill:
+        return Icons.receipt_long_rounded;
+      case MemoryType.todo:
+        return Icons.check_circle_outline_rounded;
+      case MemoryType.event:
+        return Icons.event_rounded;
+      case MemoryType.summary:
+        return Icons.summarize_rounded;
+      case MemoryType.unknown:
+        return Icons.help_outline_rounded;
+    }
   }
 }

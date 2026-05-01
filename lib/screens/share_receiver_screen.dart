@@ -45,8 +45,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   }
 
   void _initShareHandler() {
-    final handler = ShareHandler();
-    handler.getSharedMedia().then((media) {
+    final handler = ShareHandlerPlatform.instance;
+    handler.getInitialSharedMedia().then((media) {
       if (media != null && mounted) {
         if (media.content != null) {
           _sharedText = media.content;
@@ -106,6 +106,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           structuredData: result.data,
         );
 
+        if (!mounted) return;
         final memoryId = await context.read<MemoryProvider>().addMemory(memory);
 
         setState(() {
