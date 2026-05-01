@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 /// RS 智能助手主题配置
 /// 设计方向: Soft Luxury - 柔和奢华风格
 /// 使用深靛蓝为主色，金色为点缀，营造高级感
+/// Android平台使用Material Design 3，iOS使用默认主题
 class AppTheme {
   // 私有构造函数，防止实例化
   AppTheme._();
 
   // ==================== 颜色定义 ====================
+  
+  // Material Design 3 种子颜色
+  static const Color seedColor = Color(0xFF1A1B4B); // 深靛蓝作为种子颜色
   
   // 主色调 - 深靛蓝
   static const Color primaryColor = Color(0xFF1A1B4B);
@@ -43,7 +48,286 @@ class AppTheme {
 
   // ==================== 亮色主题 ====================
   
+  /// 获取亮色主题（根据平台选择Material Design 3或默认主题）
   static ThemeData get lightTheme {
+    if (Platform.isAndroid) {
+      return _material3LightTheme;
+    }
+    return _defaultLightTheme;
+  }
+  
+  /// Material Design 3 亮色主题（Android平台）
+  static ThemeData get _material3LightTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: seedColor,
+      brightness: Brightness.light,
+    );
+    
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: colorScheme,
+      
+      // 背景色
+      scaffoldBackgroundColor: colorScheme.surface,
+      
+      // AppBar主题
+      appBarTheme: AppBarTheme(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onSurface,
+          letterSpacing: -0.5,
+        ),
+        iconTheme: IconThemeData(
+          color: colorScheme.onSurface,
+        ),
+      ),
+      
+      // 卡片主题
+      cardTheme: CardThemeData(
+        color: colorScheme.surfaceContainerLow,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        margin: EdgeInsets.zero,
+      ),
+      
+      // 底部导航栏主题
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        height: 65,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        indicatorColor: colorScheme.primaryContainer,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(
+              fontFamily: 'NotoSansSC',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            );
+          }
+          return TextStyle(
+            fontFamily: 'NotoSansSC',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurfaceVariant,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(
+              color: colorScheme.onSurface,
+              size: 24,
+            );
+          }
+          return IconThemeData(
+            color: colorScheme.onSurfaceVariant,
+            size: 24,
+          );
+        }),
+      ),
+      
+      // 输入框主题
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colorScheme.surfaceContainerLow,
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        hintStyle: TextStyle(
+          fontFamily: 'NotoSansSC',
+          color: colorScheme.onSurfaceVariant,
+          fontSize: 14,
+        ),
+      ),
+      
+      // 按钮主题
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          elevation: 0,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: TextStyle(
+            fontFamily: 'NotoSansSC',
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colorScheme.primary,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          side: BorderSide(color: colorScheme.outline),
+          textStyle: TextStyle(
+            fontFamily: 'NotoSansSC',
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      
+      // FAB主题
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      
+      // Chip主题
+      chipTheme: ChipThemeData(
+        backgroundColor: colorScheme.surfaceContainerLow,
+        selectedColor: colorScheme.primaryContainer,
+        labelStyle: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: colorScheme.outline),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      
+      // Checkbox主题
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.primary;
+          }
+          return Colors.transparent;
+        }),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+      
+      // 文字主题
+      textTheme: TextTheme(
+        displayLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: colorScheme.onSurface,
+          letterSpacing: -1,
+        ),
+        displayMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onSurface,
+          letterSpacing: -0.5,
+        ),
+        headlineLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onSurface,
+          letterSpacing: -0.5,
+        ),
+        headlineMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        titleLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        titleMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        titleSmall: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        bodyLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurface,
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurfaceVariant,
+          height: 1.5,
+        ),
+        bodySmall: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurfaceVariant,
+          height: 1.5,
+        ),
+        labelLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        labelMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurfaceVariant,
+        ),
+        labelSmall: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+  
+  /// 默认亮色主题（iOS平台）
+  static ThemeData get _defaultLightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -321,7 +605,191 @@ class AppTheme {
 
   // ==================== 暗色主题 ====================
   
+  /// 获取暗色主题（根据平台选择Material Design 3或默认主题）
   static ThemeData get darkTheme {
+    if (Platform.isAndroid) {
+      return _material3DarkTheme;
+    }
+    return _defaultDarkTheme;
+  }
+  
+  /// Material Design 3 暗色主题（Android平台）
+  static ThemeData get _material3DarkTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: seedColor,
+      brightness: Brightness.dark,
+    );
+    
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: colorScheme,
+      
+      scaffoldBackgroundColor: colorScheme.surface,
+      
+      appBarTheme: AppBarTheme(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onSurface,
+          letterSpacing: -0.5,
+        ),
+        iconTheme: IconThemeData(
+          color: colorScheme.onSurface,
+        ),
+      ),
+      
+      cardTheme: CardThemeData(
+        color: colorScheme.surfaceContainerLow,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        height: 65,
+        indicatorColor: colorScheme.primaryContainer,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(
+              fontFamily: 'NotoSansSC',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            );
+          }
+          return TextStyle(
+            fontFamily: 'NotoSansSC',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: colorScheme.onSurfaceVariant,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(
+              color: colorScheme.onSurface,
+              size: 24,
+            );
+          }
+          return IconThemeData(
+            color: colorScheme.onSurfaceVariant,
+            size: 24,
+          );
+        }),
+      ),
+      
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colorScheme.surfaceContainerLow,
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
+        hintStyle: TextStyle(
+          fontFamily: 'NotoSansSC',
+          color: colorScheme.onSurfaceVariant,
+          fontSize: 14,
+        ),
+      ),
+      
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          elevation: 0,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+      
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      
+      textTheme: TextTheme(
+        displayLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          color: colorScheme.onSurface,
+          letterSpacing: -1,
+        ),
+        headlineLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: colorScheme.onSurface,
+          letterSpacing: -0.5,
+        ),
+        headlineMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        titleLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        titleMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        bodyLarge: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurface,
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurfaceVariant,
+          height: 1.5,
+        ),
+        bodySmall: TextStyle(
+          fontFamily: 'NotoSansSC',
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: colorScheme.onSurfaceVariant,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+  
+  /// 默认暗色主题（iOS平台）
+  static ThemeData get _defaultDarkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,

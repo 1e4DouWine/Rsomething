@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/app_providers.dart';
 import '../services/settings_service.dart';
 import '../services/ai_service.dart';
-import '../theme/app_theme.dart';
 
 /// 设置页面
 /// 设计特点: 卡片式分组 + 渐变头部 + 圆角图标
@@ -48,21 +47,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0E1B) : AppTheme.backgroundColor,
+        backgroundColor: colorScheme.surface,
         body: Center(
           child: CircularProgressIndicator(
-            color: AppTheme.accentColor,
+            color: colorScheme.primary,
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0E1B) : AppTheme.backgroundColor,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -89,6 +88,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -98,6 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               '我的',
               style: theme.textTheme.displayMedium?.copyWith(
+                color: colorScheme.onSurface,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -1,
               ),
@@ -106,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               '个性化你的 RS',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textTertiary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -116,6 +118,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildProfileCard(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       child: Container(
@@ -123,8 +127,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppTheme.primaryColor,
-              AppTheme.primaryLight,
+              colorScheme.primary,
+              colorScheme.primary.withValues(alpha: 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -132,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withValues(alpha: 0.4),
+              color: colorScheme.primary.withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -144,13 +148,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: colorScheme.onPrimary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Icon(
                 Icons.auto_awesome_rounded,
                 size: 40,
-                color: Colors.white,
+                color: colorScheme.onPrimary,
               ),
             ),
             const SizedBox(width: 24),
@@ -158,11 +162,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'RS 智能助手',
                     style: TextStyle(
                       fontFamily: 'NotoSansSC',
-                      color: Colors.white,
+                      color: colorScheme.onPrimary,
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
@@ -175,14 +179,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: colorScheme.onPrimary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'v1.0.0',
                       style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: colorScheme.onPrimary.withValues(alpha: 0.9),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -198,11 +202,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAIConfigSection(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -231,12 +237,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentColor.withValues(alpha: 0.12),
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(
                           Icons.smart_toy_rounded,
-                          color: AppTheme.accentColor,
+                          color: colorScheme.primary,
                           size: 24,
                         ),
                       ),
@@ -249,12 +255,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               'AI 模型配置',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '设置大模型 API 参数',
-                              style: theme.textTheme.bodySmall,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -264,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         duration: const Duration(milliseconds: 200),
                         child: Icon(
                           Icons.expand_more_rounded,
-                          color: AppTheme.textTertiary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -289,6 +298,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAIConfigForm(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Form(
@@ -296,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Divider(color: AppTheme.dividerColor),
+            Divider(color: colorScheme.outline),
             const SizedBox(height: 20),
             
             // API Base URL
@@ -357,19 +368,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppTheme.accentColor,
+                              color: colorScheme.primary,
                             ),
                           )
                         : Icon(Icons.wifi_tethering_rounded, size: 18),
                     label: Text(_isTesting ? '测试中...' : '测试连接'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.accentColor,
+                      foregroundColor: colorScheme.primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       side: BorderSide(
-                        color: AppTheme.accentColor.withValues(alpha: 0.3),
+                        color: colorScheme.outline,
                       ),
                     ),
                   ),
@@ -381,8 +392,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: const Icon(Icons.save_rounded, size: 18),
                     label: const Text('保存配置'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accentColor,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -419,6 +430,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildShareSettings(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return FutureBuilder<SettingsService>(
       future: SettingsService.getInstance(),
       builder: (context, snapshot) {
@@ -429,7 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
           child: Container(
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
+              color: colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -448,7 +461,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Icon(
                         Icons.tune_rounded,
-                        color: AppTheme.textSecondary,
+                        color: colorScheme.onSurfaceVariant,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -456,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         '分享设置',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -476,7 +489,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 
-                Divider(indent: 56, endIndent: 20, color: AppTheme.dividerColor),
+                Divider(indent: 56, endIndent: 20, color: colorScheme.outline),
                 
                 // 提醒时间
                 _buildSettingTile(
@@ -502,6 +515,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
@@ -509,10 +524,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppTheme.backgroundColor,
+              color: colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 20, color: AppTheme.textSecondary),
+            child: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -523,11 +538,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: theme.textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -535,7 +553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppTheme.accentColor,
+            activeThumbColor: colorScheme.primary,
           ),
         ],
       ),
@@ -549,6 +567,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colorScheme = theme.colorScheme;
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -561,10 +581,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor,
+                  color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: AppTheme.textSecondary),
+                child: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -575,18 +595,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       subtitle,
-                      style: theme.textTheme.bodySmall,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: AppTheme.textTertiary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -596,11 +619,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAboutSection(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -619,7 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Icon(
                     Icons.info_outline_rounded,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -627,7 +652,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     '其他',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -642,7 +667,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => _showAboutDialog(),
             ),
             
-            Divider(indent: 56, endIndent: 20, color: AppTheme.dividerColor),
+            Divider(indent: 56, endIndent: 20, color: colorScheme.outline),
             
             _buildSettingTile(
               theme,
@@ -654,7 +679,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             
-            Divider(indent: 56, endIndent: 20, color: AppTheme.dividerColor),
+            Divider(indent: 56, endIndent: 20, color: colorScheme.outline),
             
             _buildDangerTile(
               theme,
@@ -676,6 +701,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colorScheme = theme.colorScheme;
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -688,10 +715,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withValues(alpha: 0.1),
+                  color: colorScheme.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: AppTheme.errorColor),
+                child: Icon(icon, size: 20, color: colorScheme.error),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -702,19 +729,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
-                        color: AppTheme.errorColor,
+                        color: colorScheme.error,
                       ),
                     ),
                     Text(
                       subtitle,
-                      style: theme.textTheme.bodySmall,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: AppTheme.errorColor.withValues(alpha: 0.5),
+                color: colorScheme.error.withValues(alpha: 0.5),
               ),
             ],
           ),
@@ -739,10 +768,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final success = await aiService.testConnection();
 
       if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(success ? '连接成功！' : '连接失败，请检查配置'),
-            backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+            backgroundColor: success ? colorScheme.primary : colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -767,10 +797,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (mounted) {
       context.read<AIProvider>().updateConfig();
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('配置已保存'),
-          backgroundColor: AppTheme.successColor,
+          backgroundColor: colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -784,40 +815,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final minutes = await showModalBottomSheet<int>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.dividerColor,
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.outline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '选择提醒时间',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+              const SizedBox(height: 24),
+              Text(
+                '选择提醒时间',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            _buildTimeOption(context, '提前 15 分钟', 15),
-            _buildTimeOption(context, '提前 30 分钟', 30),
-            _buildTimeOption(context, '提前 1 小时', 60),
-            _buildTimeOption(context, '提前 2 小时', 120),
-            _buildTimeOption(context, '提前 1 天', 1440),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+              const SizedBox(height: 24),
+              _buildTimeOption(context, '提前 15 分钟', 15),
+              _buildTimeOption(context, '提前 30 分钟', 30),
+              _buildTimeOption(context, '提前 1 小时', 60),
+              _buildTimeOption(context, '提前 2 小时', 120),
+              _buildTimeOption(context, '提前 1 天', 1440),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
     );
 
     if (minutes != null) {
@@ -827,6 +864,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildTimeOption(BuildContext context, String title, int minutes) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -837,13 +877,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Icon(
                 Icons.access_time_rounded,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
                 size: 20,
               ),
               const SizedBox(width: 16),
               Text(
                 title,
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -853,6 +895,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showAboutDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -870,8 +915,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryColor,
-                      AppTheme.primaryLight,
+                      colorScheme.primary,
+                      colorScheme.primary.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(24),
@@ -879,36 +924,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Icon(
                   Icons.auto_awesome_rounded,
                   size: 40,
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                 ),
               ),
               const SizedBox(height: 20),
               Text(
                 'RS 智能助手',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'v1.0.0',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textTertiary,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 24),
               Text(
                 'RS 是一款智能个人知识助手，深度融入系统分享机制，让碎片信息被高效整理和记忆。',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   height: 1.6,
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 24),
               Text(
                 '© 2026 RS Team',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textTertiary,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 24),
@@ -917,8 +964,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -935,6 +982,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _showClearDataDialog() async {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -945,7 +994,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(
               Icons.warning_rounded,
-              color: AppTheme.errorColor,
+              color: colorScheme.error,
             ),
             const SizedBox(width: 12),
             const Text('清空所有数据'),
@@ -957,14 +1006,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               '取消',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorColor,
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
             ),
             child: const Text('确认清空'),
           ),
@@ -977,7 +1026,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('所有数据已清空'),
-          backgroundColor: AppTheme.successColor,
+          backgroundColor: colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

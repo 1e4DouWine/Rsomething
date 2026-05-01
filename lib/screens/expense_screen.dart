@@ -50,10 +50,10 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0E1B) : AppTheme.backgroundColor,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Consumer<ExpenseProvider>(
           builder: (context, provider, child) {
@@ -79,6 +79,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -93,13 +95,14 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                     style: theme.textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -1,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '追踪你的每一笔消费',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textTertiary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -124,12 +127,14 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   }
 
   Widget _buildMonthSelector(ThemeData theme, ExpenseProvider provider) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -154,10 +159,10 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               },
               icon: Icon(
                 Icons.chevron_left_rounded,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
               style: IconButton.styleFrom(
-                backgroundColor: AppTheme.backgroundColor,
+                backgroundColor: colorScheme.surfaceContainerLow,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -170,6 +175,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 key: ValueKey('${provider.selectedYear}-${provider.selectedMonth}'),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ),
@@ -185,10 +191,10 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               },
               icon: Icon(
                 Icons.chevron_right_rounded,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
               style: IconButton.styleFrom(
-                backgroundColor: AppTheme.backgroundColor,
+                backgroundColor: colorScheme.surfaceContainerLow,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -201,6 +207,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   }
 
   Widget _buildMonthlySummary(ThemeData theme, ExpenseProvider provider) {
+    final colorScheme = theme.colorScheme;
+    
     return FadeTransition(
       opacity: _headerAnimation,
       child: SlideTransition(
@@ -215,8 +223,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryColor,
-                  AppTheme.primaryLight,
+                  colorScheme.primary,
+                  colorScheme.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -224,7 +232,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                  color: colorScheme.primary.withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -236,7 +244,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   '本月支出',
                   style: TextStyle(
                     fontFamily: 'NotoSansSC',
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: colorScheme.onPrimary.withValues(alpha: 0.8),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -249,9 +257,9 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   builder: (context, value, child) {
                     return Text(
                       '¥${value.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                         fontSize: 42,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -2,
@@ -267,7 +275,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          Colors.white.withValues(alpha: 0.3),
+                          colorScheme.onPrimary.withValues(alpha: 0.3),
                           Colors.transparent,
                         ],
                       ),
@@ -332,13 +340,15 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   Widget _buildCategoryLegend(ThemeData theme, ExpenseProvider provider) {
     if (provider.categoryStats.isEmpty) return const SizedBox.shrink();
+    
+    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -355,7 +365,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               '消费分类',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 16),
@@ -427,6 +437,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   }
 
   Widget _buildExpenseList(ThemeData theme, ExpenseProvider provider) {
+    final colorScheme = theme.colorScheme;
+    
     if (provider.expenses.isEmpty) {
       return SliverFillRemaining(
         child: Center(
@@ -453,6 +465,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   '暂无账单记录',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -460,7 +473,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   '分享消费小票到 RS\n自动识别并记录',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textTertiary,
+                    color: colorScheme.onSurfaceVariant,
                     height: 1.5,
                   ),
                 ),
@@ -484,7 +497,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
+                  color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
@@ -517,6 +530,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                             expense.note ?? expense.category,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -524,7 +538,9 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                           const SizedBox(height: 4),
                           Text(
                             DateFormat('MM月dd日').format(expense.date),
-                            style: theme.textTheme.bodySmall,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -533,7 +549,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                       '¥${expense.amount.toStringAsFixed(2)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ],

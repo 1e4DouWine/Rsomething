@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_providers.dart';
 import '../models/memory.dart';
-import '../theme/app_theme.dart';
 
 /// 待办页面
 /// 设计特点: 滑动操作 + 进度统计 + 柔和动画
@@ -46,10 +45,10 @@ class _TodoScreenState extends State<TodoScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0E1B) : AppTheme.backgroundColor,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Consumer<TodoProvider>(
           builder: (context, provider, child) {
@@ -68,8 +67,8 @@ class _TodoScreenState extends State<TodoScreen>
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
           onPressed: () => _showAddTodoDialog(context),
-          backgroundColor: AppTheme.todoColor,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
           elevation: 4,
           icon: const Icon(Icons.add_rounded, size: 20),
           label: const Text(
@@ -85,6 +84,8 @@ class _TodoScreenState extends State<TodoScreen>
   }
 
   Widget _buildHeader(ThemeData theme, TodoProvider provider) {
+    final colorScheme = theme.colorScheme;
+    
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -98,6 +99,7 @@ class _TodoScreenState extends State<TodoScreen>
                     '待办',
                     style: theme.textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
                       letterSpacing: -1,
                     ),
                   ),
@@ -105,7 +107,7 @@ class _TodoScreenState extends State<TodoScreen>
                   Text(
                     '${provider.todos.where((t) => !t.isCompleted).length} 项待完成',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textTertiary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -114,7 +116,7 @@ class _TodoScreenState extends State<TodoScreen>
             // 显示/隐藏已完成切换
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
+                color: colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -130,8 +132,8 @@ class _TodoScreenState extends State<TodoScreen>
                       ? Icons.visibility_rounded
                       : Icons.visibility_off_rounded,
                   color: provider.showCompleted
-                      ? AppTheme.todoColor
-                      : AppTheme.textTertiary,
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
                 tooltip: provider.showCompleted ? '隐藏已完成' : '显示已完成',
                 onPressed: () => provider.toggleShowCompleted(),
@@ -147,6 +149,7 @@ class _TodoScreenState extends State<TodoScreen>
     final total = provider.todos.length;
     final completed = provider.todos.where((t) => t.isCompleted).length;
     final progress = total > 0 ? completed / total : 0.0;
+    final colorScheme = theme.colorScheme;
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -156,8 +159,8 @@ class _TodoScreenState extends State<TodoScreen>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.todoColor,
-                AppTheme.todoColor.withValues(alpha: 0.8),
+                colorScheme.primary,
+                colorScheme.primary.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -165,7 +168,7 @@ class _TodoScreenState extends State<TodoScreen>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.todoColor.withValues(alpha: 0.3),
+                color: colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -185,17 +188,17 @@ class _TodoScreenState extends State<TodoScreen>
                       height: 80,
                       child: CircularProgressIndicator(
                         value: progress,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        backgroundColor: colorScheme.onPrimary.withValues(alpha: 0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
                         strokeWidth: 8,
                         strokeCap: StrokeCap.round,
                       ),
                     ),
                     Text(
                       '${(progress * 100).toInt()}%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
@@ -210,11 +213,11 @@ class _TodoScreenState extends State<TodoScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '完成进度',
                       style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white70,
+                        color: colorScheme.onPrimary.withValues(alpha: 0.7),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -222,9 +225,9 @@ class _TodoScreenState extends State<TodoScreen>
                     const SizedBox(height: 8),
                     Text(
                       '$completed / $total',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -1,
@@ -235,7 +238,7 @@ class _TodoScreenState extends State<TodoScreen>
                       '已完成 / 总计',
                       style: TextStyle(
                         fontFamily: 'NotoSansSC',
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: colorScheme.onPrimary.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -271,6 +274,8 @@ class _TodoScreenState extends State<TodoScreen>
   }
 
   Widget _buildEmptyState(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(48),
@@ -281,13 +286,13 @@ class _TodoScreenState extends State<TodoScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.todoColor.withValues(alpha: 0.1),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.check_circle_outline_rounded,
                 size: 56,
-                color: AppTheme.todoColor,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 32),
@@ -295,6 +300,7 @@ class _TodoScreenState extends State<TodoScreen>
               '暂无待办事项',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -302,7 +308,7 @@ class _TodoScreenState extends State<TodoScreen>
               '点击下方按钮添加待办\n或分享取件码到 RS',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textTertiary,
+                color: colorScheme.onSurfaceVariant,
                 height: 1.6,
               ),
             ),
@@ -312,8 +318,8 @@ class _TodoScreenState extends State<TodoScreen>
               icon: const Icon(Icons.add_rounded),
               label: const Text('添加待办'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.todoColor,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 28,
                   vertical: 14,
@@ -327,6 +333,7 @@ class _TodoScreenState extends State<TodoScreen>
   }
 
   Widget _buildTodoItem(ThemeData theme, Todo todo, TodoProvider provider) {
+    final colorScheme = theme.colorScheme;
     final isOverdue = todo.dueDate != null &&
         todo.dueDate!.isBefore(DateTime.now()) &&
         !todo.isCompleted;
@@ -339,12 +346,12 @@ class _TodoScreenState extends State<TodoScreen>
         padding: const EdgeInsets.only(right: 24),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppTheme.errorColor,
+          color: colorScheme.error,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.delete_rounded,
-          color: Colors.white,
+          color: colorScheme.onError,
           size: 24,
         ),
       ),
@@ -362,14 +369,14 @@ class _TodoScreenState extends State<TodoScreen>
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(
                   '取消',
-                  style: TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.errorColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.error,
+                  foregroundColor: colorScheme.onError,
                 ),
                 child: const Text('删除'),
               ),
@@ -383,7 +390,7 @@ class _TodoScreenState extends State<TodoScreen>
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -413,23 +420,23 @@ class _TodoScreenState extends State<TodoScreen>
                       height: 28,
                       decoration: BoxDecoration(
                         color: todo.isCompleted
-                            ? AppTheme.todoColor
+                            ? colorScheme.primary
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: todo.isCompleted
-                              ? AppTheme.todoColor
+                              ? colorScheme.primary
                               : isOverdue
-                                  ? AppTheme.errorColor
-                                  : AppTheme.dividerColor,
+                                  ? colorScheme.error
+                                  : colorScheme.outline,
                           width: 2,
                         ),
                       ),
                       child: todo.isCompleted
-                          ? const Icon(
+                          ? Icon(
                               Icons.check_rounded,
                               size: 18,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                             )
                           : null,
                     ),
@@ -448,8 +455,8 @@ class _TodoScreenState extends State<TodoScreen>
                                 ? TextDecoration.lineThrough
                                 : null,
                             color: todo.isCompleted
-                                ? AppTheme.textTertiary
-                                : AppTheme.textPrimary,
+                                ? colorScheme.onSurfaceVariant
+                                : colorScheme.onSurface,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -461,16 +468,16 @@ class _TodoScreenState extends State<TodoScreen>
                                 Icons.access_time_rounded,
                                 size: 14,
                                 color: isOverdue
-                                    ? AppTheme.errorColor
-                                    : AppTheme.textTertiary,
+                                    ? colorScheme.error
+                                    : colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 DateFormat('MM月dd日 HH:mm').format(todo.dueDate!),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: isOverdue
-                                      ? AppTheme.errorColor
-                                      : AppTheme.textTertiary,
+                                      ? colorScheme.error
+                                      : colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               if (isOverdue) ...[
@@ -481,7 +488,7 @@ class _TodoScreenState extends State<TodoScreen>
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.errorColor.withValues(alpha: 0.1),
+                                    color: colorScheme.error.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -490,7 +497,7 @@ class _TodoScreenState extends State<TodoScreen>
                                       fontFamily: 'NotoSansSC',
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.errorColor,
+                                      color: colorScheme.error,
                                     ),
                                   ),
                                 ),
@@ -519,86 +526,91 @@ class _TodoScreenState extends State<TodoScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 24,
-            right: 24,
-            top: 12,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 拖拽指示器
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.dividerColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // 标题
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
+        builder: (context, setState) {
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
+          
+          return Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 24,
+              right: 24,
+              top: 12,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 拖拽指示器
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
                     decoration: BoxDecoration(
-                      color: AppTheme.todoColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+                      color: colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    child: Icon(
-                      Icons.check_circle_outline_rounded,
-                      color: AppTheme.todoColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    '添加待办',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              // 输入框
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  hintText: '输入待办事项...',
-                  prefixIcon: Icon(
-                    Icons.edit_rounded,
-                    color: AppTheme.textTertiary,
                   ),
                 ),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              
-              // 日期选择
-              Container(
+                const SizedBox(height: 24),
+                
+                // 标题
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: colorScheme.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      '添加待办',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // 输入框
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    hintText: '输入待办事项...',
+                    prefixIcon: Icon(
+                      Icons.edit_rounded,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                
+                // 日期选择
+                Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.backgroundColor,
+                  color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: ListTile(
                   leading: Icon(
                     Icons.calendar_today_rounded,
                     color: selectedDate != null
-                        ? AppTheme.todoColor
-                        : AppTheme.textTertiary,
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
                   ),
                   title: Text(
                     selectedDate != null
@@ -607,15 +619,15 @@ class _TodoScreenState extends State<TodoScreen>
                     style: TextStyle(
                       fontFamily: 'NotoSansSC',
                       color: selectedDate != null
-                          ? AppTheme.textPrimary
-                          : AppTheme.textTertiary,
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurfaceVariant,
                     ),
                   ),
                   trailing: selectedDate != null
                       ? IconButton(
                           icon: Icon(
                             Icons.clear_rounded,
-                            color: AppTheme.textTertiary,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                           onPressed: () {
                             setState(() => selectedDate = null);
@@ -633,9 +645,9 @@ class _TodoScreenState extends State<TodoScreen>
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                       builder: (context, child) {
                         return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: Theme.of(context).colorScheme.copyWith(
-                              primary: AppTheme.todoColor,
+                          data: theme.copyWith(
+                            colorScheme: colorScheme.copyWith(
+                              primary: colorScheme.primary,
                             ),
                           ),
                           child: child!,
@@ -649,9 +661,9 @@ class _TodoScreenState extends State<TodoScreen>
                         initialTime: TimeOfDay.now(),
                         builder: (context, child) {
                           return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: Theme.of(context).colorScheme.copyWith(
-                                primary: AppTheme.todoColor,
+                            data: theme.copyWith(
+                              colorScheme: colorScheme.copyWith(
+                                primary: colorScheme.primary,
                               ),
                             ),
                             child: child!,
@@ -683,7 +695,7 @@ class _TodoScreenState extends State<TodoScreen>
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text('请输入待办内容'),
-                        backgroundColor: AppTheme.warningColor,
+                        backgroundColor: colorScheme.error,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -721,14 +733,14 @@ class _TodoScreenState extends State<TodoScreen>
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.todoColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
                   elevation: 4,
-                  shadowColor: AppTheme.todoColor.withValues(alpha: 0.4),
+                  shadowColor: colorScheme.primary.withValues(alpha: 0.4),
                 ),
                 child: const Text(
                   '添加待办',
@@ -741,12 +753,16 @@ class _TodoScreenState extends State<TodoScreen>
               const SizedBox(height: 24),
             ],
           ),
-        ),
+        );
+        },
       ),
     );
   }
 
   void _showTodoDetail(BuildContext context, Todo todo) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -765,7 +781,7 @@ class _TodoScreenState extends State<TodoScreen>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppTheme.todoColor.withValues(alpha: 0.1),
+                      color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Icon(
@@ -773,8 +789,8 @@ class _TodoScreenState extends State<TodoScreen>
                           ? Icons.check_circle_rounded
                           : Icons.radio_button_unchecked_rounded,
                       color: todo.isCompleted
-                          ? AppTheme.successColor
-                          : AppTheme.todoColor,
+                          ? colorScheme.primary
+                          : colorScheme.primary,
                       size: 28,
                     ),
                   ),
@@ -785,14 +801,17 @@ class _TodoScreenState extends State<TodoScreen>
                       children: [
                         Text(
                           todo.isCompleted ? '已完成' : '待完成',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         if (todo.dueDate != null)
                           Text(
                             DateFormat('yyyy-MM-dd HH:mm').format(todo.dueDate!),
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                       ],
                     ),
@@ -801,7 +820,7 @@ class _TodoScreenState extends State<TodoScreen>
                     onPressed: () => Navigator.pop(context),
                     icon: Icon(
                       Icons.close_rounded,
-                      color: AppTheme.textTertiary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -811,8 +830,9 @@ class _TodoScreenState extends State<TodoScreen>
               // 标题
               Text(
                 todo.title,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 24),
@@ -852,8 +872,8 @@ class _TodoScreenState extends State<TodoScreen>
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.todoColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -875,21 +895,27 @@ class _TodoScreenState extends State<TodoScreen>
     String label,
     String value,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppTheme.textSecondary),
+        Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             Text(
               value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
               ),
             ),
           ],

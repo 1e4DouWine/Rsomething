@@ -50,10 +50,10 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0E1B) : AppTheme.backgroundColor,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,8 +68,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
           onPressed: _showAddDialog,
-          backgroundColor: AppTheme.accentColor,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
           elevation: 4,
           icon: const Icon(Icons.auto_awesome, size: 20),
           label: const Text(
@@ -85,6 +85,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       child: Row(
@@ -98,13 +100,14 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
                   style: theme.textTheme.displayMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -1,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '让碎片信息变得有序',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textTertiary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -117,9 +120,11 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   Widget _buildSearchButton(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -132,7 +137,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
       child: IconButton(
         icon: Icon(
           Icons.search_rounded,
-          color: AppTheme.textSecondary,
+          color: colorScheme.onSurfaceVariant,
         ),
         onPressed: _showSearchDialog,
       ),
@@ -161,9 +166,10 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
 
   Widget _buildChip(ThemeData theme, String label, MemoryType? type) {
     final isSelected = _selectedType == type;
+    final colorScheme = theme.colorScheme;
     final color = type != null
         ? AppTheme.getMemoryTypeColor(type.value)
-        : AppTheme.primaryColor;
+        : colorScheme.primary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -173,7 +179,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           style: TextStyle(
             fontFamily: 'NotoSansSC',
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppTheme.textSecondary,
+            color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
           ),
         ),
         selected: isSelected,
@@ -183,13 +189,13 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
             selected ? type : null,
           );
         },
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: colorScheme.surfaceContainerLow,
         selectedColor: color,
-        checkmarkColor: Colors.white,
+        checkmarkColor: colorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: isSelected ? color : AppTheme.dividerColor,
+            color: isSelected ? color : colorScheme.outline,
             width: 1.5,
           ),
         ),
@@ -233,6 +239,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   Widget _buildLoadingState(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -242,7 +250,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
             height: 48,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              color: AppTheme.accentColor,
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 16),
@@ -256,6 +264,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   Widget _buildEmptyState(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(48),
@@ -266,13 +276,13 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.accentColor.withValues(alpha: 0.1),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.auto_awesome_outlined,
                 size: 56,
-                color: AppTheme.accentColor,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 32),
@@ -280,6 +290,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               '还没有记忆',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -287,7 +298,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               '点击下方按钮或分享内容到 RS\n开始你的智能记忆之旅',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textTertiary,
+                color: colorScheme.onSurfaceVariant,
                 height: 1.6,
               ),
             ),
@@ -297,8 +308,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               icon: const Icon(Icons.add_rounded),
               label: const Text('添加第一条记忆'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentColor,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 28,
                   vertical: 14,
@@ -312,6 +323,9 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   void _showSearchDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -320,7 +334,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
         ),
         title: Row(
           children: [
-            Icon(Icons.search_rounded, color: AppTheme.accentColor),
+            Icon(Icons.search_rounded, color: colorScheme.primary),
             const SizedBox(width: 12),
             const Text('搜索记忆'),
           ],
@@ -329,7 +343,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           controller: _searchController,
           decoration: InputDecoration(
             hintText: '输入关键词...',
-            prefixIcon: Icon(Icons.search, color: AppTheme.textTertiary),
+            prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
           ),
           autofocus: true,
         ),
@@ -338,7 +352,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               '取消',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           ),
           ElevatedButton(
@@ -349,8 +363,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentColor,
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
             ),
             child: const Text('搜索'),
           ),
@@ -396,10 +410,11 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     }
 
     if (mounted) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('已确认并保存'),
-          backgroundColor: AppTheme.successColor,
+          backgroundColor: colorScheme.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -494,11 +509,12 @@ class _AddContentSheetState extends State<AddContentSheet>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
@@ -524,7 +540,7 @@ class _AddContentSheetState extends State<AddContentSheet>
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.dividerColor,
+                color: colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -537,12 +553,12 @@ class _AddContentSheetState extends State<AddContentSheet>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withValues(alpha: 0.1),
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   Icons.auto_awesome,
-                  color: AppTheme.accentColor,
+                  color: colorScheme.primary,
                   size: 24,
                 ),
               ),
@@ -555,12 +571,15 @@ class _AddContentSheetState extends State<AddContentSheet>
                       '添加新记忆',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'AI 将自动识别内容类型',
-                      style: theme.textTheme.bodySmall,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -572,10 +591,10 @@ class _AddContentSheetState extends State<AddContentSheet>
           // 输入框
           Container(
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
+              color: colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppTheme.dividerColor,
+                color: colorScheme.outline,
                 width: 1.5,
               ),
             ),
@@ -586,13 +605,15 @@ class _AddContentSheetState extends State<AddContentSheet>
               decoration: InputDecoration(
                 hintText: '输入或粘贴内容...\n例如：今天午饭花了35元',
                 hintStyle: TextStyle(
-                  color: AppTheme.textTertiary,
+                  color: colorScheme.onSurfaceVariant,
                   height: 1.5,
                 ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(20),
               ),
-              style: theme.textTheme.bodyLarge,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -603,15 +624,15 @@ class _AddContentSheetState extends State<AddContentSheet>
             child: ElevatedButton(
               onPressed: _isAnalyzing ? null : _analyzeContent,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentColor,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppTheme.accentColor.withValues(alpha: 0.6),
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.6),
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
                 elevation: _isAnalyzing ? 0 : 4,
-                shadowColor: AppTheme.accentColor.withValues(alpha: 0.4),
+                shadowColor: colorScheme.primary.withValues(alpha: 0.4),
               ),
               child: _isAnalyzing
                   ? Row(
@@ -622,7 +643,7 @@ class _AddContentSheetState extends State<AddContentSheet>
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -654,10 +675,11 @@ class _AddContentSheetState extends State<AddContentSheet>
   Future<void> _analyzeContent() async {
     final text = _textController.text.trim();
     if (text.isEmpty) {
+      final colorScheme = Theme.of(context).colorScheme;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('请输入内容'),
-          backgroundColor: AppTheme.warningColor,
+          backgroundColor: colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -689,10 +711,11 @@ class _AddContentSheetState extends State<AddContentSheet>
         Navigator.pop(context);
         if (!mounted) return;
         
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('已添加到记忆流'),
-            backgroundColor: AppTheme.successColor,
+            backgroundColor: colorScheme.primary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -700,10 +723,11 @@ class _AddContentSheetState extends State<AddContentSheet>
           ),
         );
       } else if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('分析失败: ${aiProvider.error ?? "未知错误"}'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -745,6 +769,7 @@ class MemoryDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final typeColor = AppTheme.getMemoryTypeColor(memory.type.value);
 
     return Dialog(
@@ -781,13 +806,16 @@ class MemoryDetailDialog extends StatelessWidget {
                         memory.type.label,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('yyyy-MM-dd HH:mm')
                             .format(memory.createdAt),
-                        style: theme.textTheme.bodySmall,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -796,7 +824,7 @@ class MemoryDetailDialog extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(
                     Icons.close_rounded,
-                    color: AppTheme.textTertiary,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -822,8 +850,8 @@ class MemoryDetailDialog extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: typeColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -844,17 +872,19 @@ class MemoryDetailDialog extends StatelessWidget {
     IconData icon,
     String content,
   ) {
+    final colorScheme = theme.colorScheme;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: AppTheme.textSecondary),
+            Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: 8),
             Text(
               title,
               style: theme.textTheme.labelLarge?.copyWith(
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -864,13 +894,13 @@ class MemoryDetailDialog extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.backgroundColor,
+            color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             content,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textPrimary,
+              color: colorScheme.onSurface,
               height: 1.5,
             ),
           ),
@@ -884,18 +914,20 @@ class MemoryDetailDialog extends StatelessWidget {
     if (data.isEmpty) {
       return const SizedBox.shrink();
     }
+    
+    final colorScheme = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.data_array, size: 16, color: AppTheme.textSecondary),
+            Icon(Icons.data_array, size: 16, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: 8),
             Text(
               '识别结果',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -925,7 +957,7 @@ class MemoryDetailDialog extends StatelessWidget {
                       child: Text(
                         entry.key,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -934,7 +966,7 @@ class MemoryDetailDialog extends StatelessWidget {
                       child: Text(
                         '${entry.value}',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textPrimary,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                     ),
