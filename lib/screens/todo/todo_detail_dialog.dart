@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
 
+/// 待办详情对话框
+///
+/// 以弹窗形式展示待办事项的完整信息，包括：
+/// - 完成状态图标和标签
+/// - 截止时间
+/// - 待办标题
+/// - 提醒状态
 class TodoDetailDialog extends StatelessWidget {
+  /// 待展示的待办数据
   final Todo todo;
 
   const TodoDetailDialog({super.key, required this.todo});
@@ -22,6 +30,7 @@ class TodoDetailDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 头部：状态图标 + 状态标签 + 时间 + 关闭按钮
             Row(
               children: [
                 Container(
@@ -70,6 +79,7 @@ class TodoDetailDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+            // 待办标题
             Text(
               todo.title,
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -78,6 +88,7 @@ class TodoDetailDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // 截止时间详情行
             if (todo.dueDate != null) ...[
               _buildDetailRow(
                 context,
@@ -87,6 +98,7 @@ class TodoDetailDialog extends StatelessWidget {
               ),
               const SizedBox(height: 12),
             ],
+            // 状态详情行
             _buildDetailRow(
               context,
               todo.isCompleted
@@ -96,6 +108,7 @@ class TodoDetailDialog extends StatelessWidget {
               todo.isCompleted ? '已完成' : '未完成',
             ),
             const SizedBox(height: 12),
+            // 提醒状态详情行
             _buildDetailRow(
               context,
               todo.reminder
@@ -105,6 +118,7 @@ class TodoDetailDialog extends StatelessWidget {
               todo.reminder ? '已开启' : '未开启',
             ),
             const SizedBox(height: 28),
+            // 关闭按钮
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -126,6 +140,7 @@ class TodoDetailDialog extends StatelessWidget {
     );
   }
 
+  /// 构建详情行（图标 + 标签 + 值）
   Widget _buildDetailRow(
     BuildContext context,
     IconData icon,

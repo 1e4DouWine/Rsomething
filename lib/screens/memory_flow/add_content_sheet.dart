@@ -4,6 +4,10 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../utils/type_helpers.dart';
 
+/// 添加内容底部弹窗
+///
+/// 提供手动输入文本内容并由 AI 自动分析的功能。
+/// 流程：用户输入文本 -> 点击"智能分析" -> AI 识别内容类型 -> 创建记忆并保存
 class AddContentSheet extends StatefulWidget {
   const AddContentSheet({super.key});
 
@@ -13,9 +17,16 @@ class AddContentSheet extends StatefulWidget {
 
 class _AddContentSheetState extends State<AddContentSheet>
     with SingleTickerProviderStateMixin {
+  /// 文本输入控制器
   final TextEditingController _textController = TextEditingController();
+
+  /// 是否正在分析中
   bool _isAnalyzing = false;
+
+  /// 按钮缩放动画控制器
   late AnimationController _buttonAnimationController;
+
+  /// 按钮缩放动画
   late Animation<double> _buttonScaleAnimation;
 
   @override
@@ -68,6 +79,7 @@ class _AddContentSheetState extends State<AddContentSheet>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 顶部拖拽指示条
           Center(
             child: Container(
               width: 40,
@@ -79,6 +91,7 @@ class _AddContentSheetState extends State<AddContentSheet>
             ),
           ),
           const SizedBox(height: 24),
+          // 标题区：图标 + 标题 + 副标题
           Row(
             children: [
               Container(
@@ -118,6 +131,7 @@ class _AddContentSheetState extends State<AddContentSheet>
             ],
           ),
           const SizedBox(height: 24),
+          // 文本输入区
           Container(
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerLow,
@@ -146,6 +160,7 @@ class _AddContentSheetState extends State<AddContentSheet>
             ),
           ),
           const SizedBox(height: 24),
+          // 智能分析按钮（带缩放动画）
           ScaleTransition(
             scale: _buttonScaleAnimation,
             child: ElevatedButton(
@@ -199,6 +214,11 @@ class _AddContentSheetState extends State<AddContentSheet>
     );
   }
 
+  /// 执行内容分析
+  /// 1. 验证输入不为空
+  /// 2. 调用 AI 分析文本
+  /// 3. 根据分析结果创建记忆
+  /// 4. 保存到数据库并关闭弹窗
   Future<void> _analyzeContent() async {
     final text = _textController.text.trim();
     if (text.isEmpty) {
@@ -224,6 +244,7 @@ class _AddContentSheetState extends State<AddContentSheet>
       final result = await aiProvider.analyzeText(text);
 
       if (result != null && mounted) {
+        // 根据 AI 分析结果创建记忆对象
         final memory = Memory(
           type: getMemoryTypeFromAction(result.action),
           rawContentType: RawContentType.text,
@@ -232,6 +253,7 @@ class _AddContentSheetState extends State<AddContentSheet>
           structuredData: result.data,
         );
 
+        // 保存到记忆列表
         await context.read<MemoryProvider>().addMemory(memory);
 
         if (!mounted) return;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 
+/// 根据 AI 分析的动作类型字符串转换为 MemoryType 枚举
+/// [action] AI 返回的动作类型标识符
 MemoryType getMemoryTypeFromAction(String action) {
   switch (action) {
     case 'add_expense':
@@ -16,6 +18,8 @@ MemoryType getMemoryTypeFromAction(String action) {
   }
 }
 
+/// 根据 MemoryType 获取对应的图标
+/// 用于记忆卡片和详情页的图标展示
 IconData getTypeIcon(MemoryType type) {
   switch (type) {
     case MemoryType.bill:
@@ -31,6 +35,8 @@ IconData getTypeIcon(MemoryType type) {
   }
 }
 
+/// 根据 MemoryType 获取对应的主题色
+/// 用于记忆卡片的视觉区分
 Color getTypeColor(MemoryType type) {
   switch (type) {
     case MemoryType.bill:

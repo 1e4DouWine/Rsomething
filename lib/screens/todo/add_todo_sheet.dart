@@ -4,6 +4,12 @@ import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 
+/// 添加待办底部弹窗
+///
+/// 提供手动添加待办事项的表单，包括：
+/// - 待办标题输入
+/// - 可选的截止日期/时间选择
+/// - 提交后自动创建关联的 Memory 记录和 Todo 记录
 class AddTodoSheet extends StatefulWidget {
   const AddTodoSheet({super.key});
 
@@ -12,7 +18,10 @@ class AddTodoSheet extends StatefulWidget {
 }
 
 class _AddTodoSheetState extends State<AddTodoSheet> {
+  /// 待办标题输入控制器
   final TextEditingController _titleController = TextEditingController();
+
+  /// 选中的截止日期（可选）
   DateTime? _selectedDate;
 
   @override
@@ -41,6 +50,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 顶部拖拽指示条
           Center(
             child: Container(
               width: 40,
@@ -52,6 +62,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
             ),
           ),
           const SizedBox(height: 24),
+          // 标题区
           Row(
             children: [
               Container(
@@ -77,6 +88,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
             ],
           ),
           const SizedBox(height: 24),
+          // 待办标题输入框
           TextField(
             controller: _titleController,
             decoration: InputDecoration(
@@ -89,6 +101,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
             autofocus: true,
           ),
           const SizedBox(height: 16),
+          // 截止日期选择器
           Container(
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerLow,
@@ -130,6 +143,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
             ),
           ),
           const SizedBox(height: 24),
+          // 添加按钮
           ElevatedButton(
             onPressed: _addTodo,
             style: ElevatedButton.styleFrom(
@@ -156,10 +170,13 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     );
   }
 
+  /// 弹出日期和时间选择器
+  /// 先选择日期，再选择时间
   Future<void> _pickDateTime(BuildContext context) async {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // 选择日期
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -178,6 +195,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     );
     if (date != null) {
       if (!context.mounted) return;
+      // 选择时间
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
@@ -206,6 +224,11 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     }
   }
 
+  /// 提交添加待办
+  /// 1. 验证标题不为空
+  /// 2. 创建 Memory 记录（类型为 todo）
+  /// 3. 创建 Todo 记录并关联 Memory
+  /// 4. 关闭弹窗
   Future<void> _addTodo() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
@@ -223,6 +246,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
       return;
     }
 
+    // 创建关联的 Memory 记录
     final memory = Memory(
       type: MemoryType.todo,
       rawContentType: RawContentType.text,
@@ -240,6 +264,8 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     final memoryId = await memoryProvider.addMemory(memory);
 
     if (!mounted) return;
+
+    // 创建 Todo 记录
     final todo = Todo(
       memoryId: memoryId,
       title: title,

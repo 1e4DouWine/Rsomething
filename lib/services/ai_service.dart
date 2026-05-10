@@ -1,10 +1,20 @@
 import 'package:dio/dio.dart';
 import 'dart:convert';
 
-/// AI分析结果
+/// AI 分析结果数据类
+///
+/// 封装 AI 对用户内容分析后返回的结果，包含：
+/// - 动作类型（账单/待办/日程/未知）
+/// - 置信度（0.0~1.0）
+/// - 结构化数据（具体内容取决于动作类型）
 class AnalysisResult {
+  /// 动作类型：add_expense / add_todo / add_event / unknown
   final String action;
+
+  /// 分析置信度（0.0~1.0）
   final double confidence;
+
+  /// 结构化数据（字段取决于动作类型）
   final Map<String, dynamic> data;
 
   AnalysisResult({
@@ -13,6 +23,7 @@ class AnalysisResult {
     required this.data,
   });
 
+  /// 从 JSON Map 创建 AnalysisResult 实例
   factory AnalysisResult.fromJson(Map<String, dynamic> json) {
     return AnalysisResult(
       action: json['action'] as String? ?? 'unknown',
@@ -22,10 +33,17 @@ class AnalysisResult {
   }
 }
 
-/// AI服务配置
+/// AI 服务配置数据类
+///
+/// 存储 AI API 的连接配置信息
 class AIConfig {
+  /// API 请求地址
   final String baseUrl;
+
+  /// API 密钥
   final String apiKey;
+
+  /// 使用的模型名称
   final String modelName;
 
   AIConfig({
@@ -35,24 +53,36 @@ class AIConfig {
   });
 }
 
-/// AI服务
+/// AI 服务类
+///
+/// 封装与大语言模型 API 的交互逻辑，提供文本分析和图片分析功能。
+/// 使用单例模式，基于 Dio 进行 HTTP 请求。
+/// 支持 OpenAI 兼容格式的 API 接口。
 class AIService {
+  /// 单例实例
   static AIService? _instance;
+
+  /// HTTP 客户端
   late Dio _dio;
+
+  /// AI 配置（未设置时为 null）
   AIConfig? _config;
 
+  /// 私有构造函数，初始化 Dio 并设置超时时间
   AIService._() {
     _dio = Dio();
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
   }
 
+  /// 获取单例实例
   static AIService get instance {
     _instance ??= AIService._();
     return _instance!;
   }
 
-  /// 设置AI配置
+  /// 设置 AI 配置
+  /// 更新 Dio 的请求基地址和认证头
   void setConfig(AIConfig config) {
     _config = config;
     _dio.options.baseUrl = config.baseUrl;
@@ -63,6 +93,8 @@ class AIService {
   }
 
   /// 分析文本内容
+  /// [text] 待分析的文本
+  /// 返回 [AnalysisResult]，包含动作类型和结构化数据
   Future<AnalysisResult> analyzeText(String text) async {
     if (_config == null) {
       throw Exception('AI服务未配置');
@@ -93,7 +125,9 @@ class AIService {
     }
   }
 
-  /// 分析图片（Base64编码）
+  /// 分析图片内容（Base64 编码）
+  /// [base64Image] Base64 编码的图片数据，[text] 可选的附加文本信息
+  /// 返回 [AnalysisResult]
   Future<AnalysisResult> analyzeImage(String base64Image, {String? text}) async {
     if (_config == null) {
       throw Exception('AI服务未配置');
@@ -129,7 +163,7 @@ class AIService {
       );
 
       final content = response.data['choices'][0]['message']['content'];
-      // 尝试从内容中提取JSON
+      // 从返回内容中提取 JSON 部分（模型可能返回非 JSON 前缀文字）
       final jsonStr = _extractJson(content);
       final jsonResult = json.decode(jsonStr);
       return AnalysisResult.fromJson(jsonResult);
@@ -138,7 +172,8 @@ class AIService {
     }
   }
 
-  /// 测试API连接
+  /// 测试 API 连接是否正常
+  /// 发送一个简单的请求验证配置是否正确
   Future<bool> testConnection() async {
     if (_config == null) return false;
 
@@ -159,6 +194,8 @@ class AIService {
     }
   }
 
+  /// 构建系统提示词
+  /// 定义 AI 的角色和输出格式要求，指导模型按指定 JSON 结构返回分析结果
   String _buildSystemPrompt() {
     return '''你是一个智能内容分析助手。请分析用户分享的内容，并返回JSON格式的分析结果。
 
@@ -185,8 +222,9 @@ class AIService {
 请只返回JSON，不要有其他文字。''';
   }
 
+  /// 从文本中提取 JSON 字符串
+  /// 使用正则匹配最外层花括号包裹的内容
   String _extractJson(String content) {
-    // 尝试提取JSON内容
     final jsonPattern = RegExp(r'\{[\s\S]*\}');
     final match = jsonPattern.firstMatch(content);
     if (match != null) {

@@ -6,6 +6,15 @@ import '../../models/models.dart';
 import 'add_todo_sheet.dart';
 import 'todo_detail_dialog.dart';
 
+/// 待办事项页面
+///
+/// 展示和管理待办事项列表，功能包括：
+/// - 显示待办完成进度（环形进度指示器）
+/// - 添加新待办事项
+/// - 切换待办完成状态
+/// - 滑动删除待办
+/// - 查看待办详情
+/// - 显示/隐藏已完成的待办
 class TodoScreen extends StatefulWidget {
   const TodoScreen({super.key});
 
@@ -15,12 +24,16 @@ class TodoScreen extends StatefulWidget {
 
 class _TodoScreenState extends State<TodoScreen>
     with SingleTickerProviderStateMixin {
+  /// FAB 弹出动画控制器
   late AnimationController _fabAnimationController;
+
+  /// FAB 缩放动画
   late Animation<double> _fabScaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    // 初始化 FAB 弹出动画
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -31,6 +44,7 @@ class _TodoScreenState extends State<TodoScreen>
     );
     _fabAnimationController.forward();
 
+    // 页面加载后自动获取待办列表
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TodoProvider>().loadTodos();
     });
@@ -63,6 +77,7 @@ class _TodoScreenState extends State<TodoScreen>
           },
         ),
       ),
+      // 浮动按钮：新增待办
       floatingActionButton: ScaleTransition(
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
@@ -83,6 +98,8 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 构建页面头部
+  /// 包含标题"待办"、待完成数量统计和显示/隐藏已完成按钮
   Widget _buildHeader(ThemeData theme, TodoProvider provider) {
     final colorScheme = theme.colorScheme;
 
@@ -113,6 +130,7 @@ class _TodoScreenState extends State<TodoScreen>
                 ],
               ),
             ),
+            // 显示/隐藏已完成按钮
             Container(
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerLow,
@@ -144,6 +162,8 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 构建完成进度统计卡片
+  /// 使用环形进度指示器展示已完成/总数的百分比
   Widget _buildProgressStats(ThemeData theme, TodoProvider provider) {
     final total = provider.todos.length;
     final completed = provider.todos.where((t) => t.isCompleted).length;
@@ -175,6 +195,7 @@ class _TodoScreenState extends State<TodoScreen>
           ),
           child: Row(
             children: [
+              // 环形进度指示器
               SizedBox(
                 width: 80,
                 height: 80,
@@ -205,6 +226,7 @@ class _TodoScreenState extends State<TodoScreen>
                 ),
               ),
               const SizedBox(width: 24),
+              // 完成数量文字
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,6 +270,8 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 构建待办列表
+  /// 空列表时显示引导页面，否则显示待办卡片列表
   Widget _buildTodoList(ThemeData theme, TodoProvider provider) {
     if (provider.todos.isEmpty) {
       return SliverFillRemaining(
@@ -269,6 +293,8 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 构建空状态 UI
+  /// 当没有待办事项时显示引导用户添加
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -328,6 +354,8 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 构建单个待办项
+  /// 支持滑动删除、点击查看详情、点击复选框切换完成状态
   Widget _buildTodoItem(ThemeData theme, Todo todo, TodoProvider provider) {
     final colorScheme = theme.colorScheme;
     final isOverdue = todo.dueDate != null &&
@@ -337,6 +365,7 @@ class _TodoScreenState extends State<TodoScreen>
     return Dismissible(
       key: Key('todo_${todo.id}'),
       direction: DismissDirection.endToStart,
+      // 滑动删除背景
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
@@ -351,6 +380,7 @@ class _TodoScreenState extends State<TodoScreen>
           size: 24,
         ),
       ),
+      // 删除前弹出确认对话框
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
           context: context,
@@ -405,6 +435,7 @@ class _TodoScreenState extends State<TodoScreen>
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
+                  // 自定义复选框（点击切换完成状态）
                   GestureDetector(
                     onTap: () {
                       provider.toggleCompletion(todo.id!, !todo.isCompleted);
@@ -437,6 +468,7 @@ class _TodoScreenState extends State<TodoScreen>
                     ),
                   ),
                   const SizedBox(width: 16),
+                  // 待办标题和截止时间
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,6 +505,7 @@ class _TodoScreenState extends State<TodoScreen>
                                       : colorScheme.onSurfaceVariant,
                                 ),
                               ),
+                              // 过期标签
                               if (isOverdue) ...[
                                 const SizedBox(width: 8),
                                 Container(
@@ -510,6 +543,7 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 显示添加待办底部弹窗
   void _showAddTodoSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -519,6 +553,7 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
+  /// 显示待办详情对话框
   void _showTodoDetail(BuildContext context, Todo todo) {
     showDialog(
       context: context,

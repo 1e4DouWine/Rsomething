@@ -4,7 +4,15 @@ import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/type_helpers.dart';
 
+/// 记忆详情对话框
+///
+/// 以弹窗形式展示单条记忆的完整信息，包括：
+/// - 类型图标和标签
+/// - 创建时间
+/// - 原始内容摘要
+/// - AI 识别的结构化数据
 class MemoryDetailDialog extends StatelessWidget {
+  /// 待展示的记忆数据
   final Memory memory;
 
   const MemoryDetailDialog({super.key, required this.memory});
@@ -25,6 +33,7 @@ class MemoryDetailDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 头部：图标 + 类型 + 时间 + 关闭按钮
             Row(
               children: [
                 Container(
@@ -72,6 +81,7 @@ class MemoryDetailDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 28),
+            // 原始内容区
             _buildSection(
               theme,
               '原始内容',
@@ -79,8 +89,10 @@ class MemoryDetailDialog extends StatelessWidget {
               memory.rawContentSummary,
             ),
             const SizedBox(height: 20),
+            // AI 识别结果区
             _buildStructuredDataSection(theme, typeColor),
             const SizedBox(height: 28),
+            // 关闭按钮
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -102,6 +114,8 @@ class MemoryDetailDialog extends StatelessWidget {
     );
   }
 
+  /// 构建内容展示区块
+  /// [title] 区块标题，[icon] 标题图标，[content] 文本内容
   Widget _buildSection(
     ThemeData theme,
     String title,
@@ -145,6 +159,8 @@ class MemoryDetailDialog extends StatelessWidget {
     );
   }
 
+  /// 构建结构化数据展示区
+  /// 以键值对形式展示 AI 识别的所有字段
   Widget _buildStructuredDataSection(ThemeData theme, Color typeColor) {
     final data = memory.structuredData;
     if (data.isEmpty) {

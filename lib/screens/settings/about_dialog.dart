@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// 关于对话框
+///
+/// 展示应用的基本信息，包括：
+/// - 应用 Logo
+/// - 应用名称"RS 智能助手"
+/// - 版本号
+/// - 应用简介
+/// - 版权信息
 class RSAboutDialog extends StatelessWidget {
   const RSAboutDialog({super.key});
 
@@ -17,6 +25,7 @@ class RSAboutDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 应用 Logo（渐变背景 + 图标）
             Container(
               width: 80,
               height: 80,
@@ -36,6 +45,7 @@ class RSAboutDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // 应用名称
             Text(
               'RS 智能助手',
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -44,6 +54,7 @@ class RSAboutDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
+            // 版本号
             Text(
               'v1.0.0',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -51,6 +62,7 @@ class RSAboutDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // 应用简介
             Text(
               'RS 是一款智能个人知识助手，深度融入系统分享机制，让碎片信息被高效整理和记忆。',
               textAlign: TextAlign.center,
@@ -60,6 +72,7 @@ class RSAboutDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // 版权信息
             Text(
               '© 2026 RS Team',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -67,6 +80,7 @@ class RSAboutDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // 关闭按钮
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -88,6 +102,7 @@ class RSAboutDialog extends StatelessWidget {
     );
   }
 
+  /// 静态方法：显示关于对话框
   static void show(BuildContext context) {
     showDialog(
       context: context,

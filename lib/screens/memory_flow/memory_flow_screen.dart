@@ -7,6 +7,15 @@ import '../../theme/app_theme.dart';
 import 'add_content_sheet.dart';
 import 'memory_detail_dialog.dart';
 
+/// 记忆流页面
+///
+/// 应用的核心页面，展示所有通过 AI 分析创建的记忆记录。
+/// 功能包括：
+/// - 按类型筛选记忆（全部/账单/待办/日程/摘要）
+/// - 搜索记忆
+/// - 新增记忆（手动输入内容由 AI 分析）
+/// - 查看记忆详情
+/// - 确认/忽略/删除记忆
 class MemoryFlowScreen extends StatefulWidget {
   const MemoryFlowScreen({super.key});
 
@@ -16,14 +25,22 @@ class MemoryFlowScreen extends StatefulWidget {
 
 class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     with SingleTickerProviderStateMixin {
+  /// 当前选中的筛选类型（null 表示全部）
   MemoryType? _selectedType;
+
+  /// 搜索输入控制器
   final TextEditingController _searchController = TextEditingController();
+
+  /// FAB 弹出动画控制器
   late AnimationController _fabAnimationController;
+
+  /// FAB 缩放动画
   late Animation<double> _fabScaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    // 初始化 FAB 弹出动画
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -34,6 +51,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
     _fabAnimationController.forward();
 
+    // 页面加载后自动获取记忆列表
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MemoryProvider>().loadMemories();
     });
@@ -63,6 +81,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           ],
         ),
       ),
+      // 浮动按钮：新增记忆
       floatingActionButton: ScaleTransition(
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
@@ -83,6 +102,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 构建页面头部
+  /// 包含标题"记忆流"、副标题和搜索按钮
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -112,6 +133,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               ],
             ),
           ),
+          // 搜索按钮
           Container(
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerLow,
@@ -137,6 +159,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 构建类型筛选标签栏
+  /// 水平滚动的 FilterChip 列表，支持按记忆类型筛选
   Widget _buildFilterChips(ThemeData theme) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -157,6 +181,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 构建单个筛选标签
+  /// [label] 显示文字，[type] 对应的 MemoryType（null 表示全部）
   Widget _buildChip(ThemeData theme, String label, MemoryType? type) {
     final isSelected = _selectedType == type;
     final colorScheme = theme.colorScheme;
@@ -199,6 +225,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 构建记忆列表
+  /// 根据加载状态显示加载指示器、空状态提示或记忆卡片列表
   Widget _buildMemoryList(ThemeData theme) {
     return Consumer<MemoryProvider>(
       builder: (context, provider, child) {
@@ -231,6 +259,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 构建加载状态 UI
   Widget _buildLoadingState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -256,6 +285,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 构建空状态 UI
+  /// 当没有记忆记录时显示引导用户添加第一条记忆
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -315,6 +346,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 显示搜索对话框
   void _showSearchDialog() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -366,6 +398,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 显示新增记忆底部弹窗
   void _showAddDialog() {
     showModalBottomSheet(
       context: context,
@@ -375,6 +408,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 显示记忆详情对话框
   void _showMemoryDetail(Memory memory) {
     showDialog(
       context: context,
@@ -382,6 +416,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 确认记忆
+  /// 将记忆状态更新为已确认，并根据类型保存到对应模块
   Future<void> _confirmMemory(Memory memory) async {
     await context.read<MemoryProvider>().updateStatus(
       memory.id!,
@@ -417,6 +453,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     }
   }
 
+  /// 忽略记忆
   Future<void> _dismissMemory(Memory memory) async {
     await context.read<MemoryProvider>().updateStatus(
       memory.id!,
@@ -424,10 +461,12 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  /// 删除记忆
   Future<void> _deleteMemory(Memory memory) async {
     await context.read<MemoryProvider>().deleteMemory(memory.id!);
   }
 
+  /// 从记忆结构化数据中提取并保存消费记录
   Future<void> _saveExpense(Memory memory) async {
     final data = memory.structuredData;
     final expense = Expense(
@@ -443,6 +482,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     await context.read<ExpenseProvider>().addExpense(expense);
   }
 
+  /// 从记忆结构化数据中提取并保存待办事项
   Future<void> _saveTodo(Memory memory) async {
     final data = memory.structuredData;
     final todo = Todo(
@@ -456,6 +496,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     await context.read<TodoProvider>().addTodo(todo);
   }
 
+  /// 保存日程事件（TODO: 对接系统日历）
   Future<void> _saveCalendarEvent(Memory memory) async {
     // TODO: 保存到系统日历
   }

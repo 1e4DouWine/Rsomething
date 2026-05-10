@@ -4,6 +4,13 @@ import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../theme/app_theme.dart';
 
+/// 账本页面
+///
+/// 展示和管理消费记录，功能包括：
+/// - 月份切换（左右箭头选择年月）
+/// - 月度消费总额展示（带动画数字滚动效果）
+/// - 按分类统计消费占比（进度条 + 百分比）
+/// - 消费记录列表（按日期倒序）
 class ExpenseScreen extends StatefulWidget {
   const ExpenseScreen({super.key});
 
@@ -13,12 +20,16 @@ class ExpenseScreen extends StatefulWidget {
 
 class _ExpenseScreenState extends State<ExpenseScreen>
     with SingleTickerProviderStateMixin {
+  /// 头部入场动画控制器
   late AnimationController _animationController;
+
+  /// 头部淡入 + 上滑动画
   late Animation<double> _headerAnimation;
 
   @override
   void initState() {
     super.initState();
+    // 初始化头部入场动画
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -29,6 +40,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
     _animationController.forward();
 
+    // 页面加载后自动获取消费数据和当月统计
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ExpenseProvider>();
       provider.loadExpenses();
@@ -76,6 +88,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 构建页面头部
+  /// 包含标题"账本"、副标题和账单图标
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -124,6 +138,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 构建月份选择器
+  /// 左右箭头切换年月，中间显示当前选中的年月
   Widget _buildMonthSelector(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
 
@@ -145,6 +161,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // 上个月按钮
             IconButton(
               onPressed: () {
                 int year = provider.selectedYear;
@@ -166,6 +183,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 ),
               ),
             ),
+            // 当前年月显示（带动画切换效果）
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Text(
@@ -177,6 +195,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 ),
               ),
             ),
+            // 下个月按钮
             IconButton(
               onPressed: () {
                 int year = provider.selectedYear;
@@ -204,6 +223,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 构建月度消费总额卡片
+  /// 带入场动画（淡入 + 上滑），金额数字有滚动动画效果
   Widget _buildMonthlySummary(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
 
@@ -248,6 +269,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
+                // 金额数字滚动动画
                 TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: provider.monthlyTotal),
                   duration: const Duration(milliseconds: 1200),
@@ -265,6 +287,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                     );
                   },
                 ),
+                // 分类统计饼图标签（仅在有数据时显示）
                 if (provider.categoryStats.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   Container(
@@ -290,6 +313,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 构建分类统计标签
+  /// 以 Wrap 布局展示各分类的颜色圆点、名称和百分比
   Widget _buildCategoryStats(ThemeData theme, ExpenseProvider provider) {
     final stats = provider.categoryStats;
     final total = stats.values.fold(0.0, (sum, value) => sum + value);
@@ -336,6 +361,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 构建分类消费详情卡片
+  /// 以列表形式展示各分类的消费金额和占比进度条
   Widget _buildCategoryLegend(ThemeData theme, ExpenseProvider provider) {
     if (provider.categoryStats.isEmpty) return const SizedBox.shrink();
 
@@ -376,6 +403,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
+                    // 分类图标
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -393,6 +421,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 分类名称和金额
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -412,6 +441,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                             ],
                           ),
                           const SizedBox(height: 8),
+                          // 占比进度条
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
@@ -434,6 +464,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 构建消费记录列表
+  /// 空列表时显示引导页面，否则显示消费记录卡片列表
   Widget _buildExpenseList(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
 
@@ -507,6 +539,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 ),
                 child: Row(
                   children: [
+                    // 分类图标
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -520,6 +553,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                       ),
                     ),
                     const SizedBox(width: 16),
+                    // 备注/分类名称和日期
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -543,6 +577,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                         ],
                       ),
                     ),
+                    // 金额
                     Text(
                       '¥${expense.amount.toStringAsFixed(2)}',
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -561,6 +596,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     );
   }
 
+  /// 根据消费分类名称获取对应的图标
   IconData _getCategoryIcon(String category) {
     switch (category) {
       case '餐饮':

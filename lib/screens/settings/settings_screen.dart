@@ -4,6 +4,13 @@ import '../../services/database_service.dart';
 import 'ai_config_section.dart';
 import 'about_dialog.dart';
 
+/// 设置页面
+///
+/// 应用的"我的"标签页，提供以下设置功能：
+/// - 用户资料卡片（展示应用名称和版本号）
+/// - AI 模型配置（API 地址、密钥、模型名称）
+/// - 分享设置（静默模式、默认提醒时间）
+/// - 其他（关于、隐私政策、清空数据）
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -44,6 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建页面头部
+  /// 包含标题"我的"和副标题
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -74,6 +83,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建用户资料卡片
+  /// 展示应用 Logo、名称"RS 智能助手"和版本号
   Widget _buildProfileCard(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -101,6 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Row(
           children: [
+            // 应用 Logo
             Container(
               width: 80,
               height: 80,
@@ -158,6 +170,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建分享设置区块
+  /// 包含静默模式开关和默认提醒时间设置
   Widget _buildShareSettings(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -184,6 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 区块标题
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                   child: Row(
@@ -204,6 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
+                // 静默模式开关
                 _buildSwitchTile(
                   theme,
                   icon: Icons.notifications_off_outlined,
@@ -216,6 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 Divider(indent: 56, endIndent: 20, color: colorScheme.outline),
+                // 默认提醒时间
                 _buildSettingTile(
                   theme,
                   icon: Icons.access_time_rounded,
@@ -231,6 +248,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建带开关的设置项
+  /// 用于布尔类型的设置项（如静默模式）
   Widget _buildSwitchTile(
     ThemeData theme, {
     required IconData icon,
@@ -284,6 +303,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建可点击的设置项
+  /// 用于触发子页面或弹窗的设置项
   Widget _buildSettingTile(
     ThemeData theme, {
     required IconData icon,
@@ -342,6 +363,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建"其他"设置区块
+  /// 包含关于、隐私政策和清空数据
   Widget _buildAboutSection(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -362,6 +385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 区块标题
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
@@ -382,6 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
+            // 关于 RS
             _buildSettingTile(
               theme,
               icon: Icons.info_rounded,
@@ -390,6 +415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => RSAboutDialog.show(context),
             ),
             Divider(indent: 56, endIndent: 20, color: colorScheme.outline),
+            // 隐私政策
             _buildSettingTile(
               theme,
               icon: Icons.privacy_tip_outlined,
@@ -400,6 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             Divider(indent: 56, endIndent: 20, color: colorScheme.outline),
+            // 清空所有数据（危险操作）
             _buildDangerTile(
               theme,
               icon: Icons.delete_forever_rounded,
@@ -413,6 +440,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 构建危险操作设置项（红色警示样式）
+  /// 用于不可逆的操作，如清空数据
   Widget _buildDangerTile(
     ThemeData theme, {
     required IconData icon,
@@ -471,6 +500,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 显示提醒时间选择底部弹窗
+  /// 提供预设的提醒时间选项（15分钟/30分钟/1小时/2小时/1天）
   Future<void> _showReminderTimePicker(SettingsService settings) async {
     final minutes = await showModalBottomSheet<int>(
       context: context,
@@ -523,6 +554,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  /// 构建时间选项行
   Widget _buildTimeOption(BuildContext context, String title, int minutes) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -554,6 +586,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// 显示清空数据确认对话框
+  /// 用户确认后删除所有本地数据
   Future<void> _showClearDataDialog() async {
     final colorScheme = Theme.of(context).colorScheme;
 

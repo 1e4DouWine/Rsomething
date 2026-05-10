@@ -7,8 +7,18 @@ import '../providers/providers.dart';
 import '../utils/type_helpers.dart';
 import '../services/ai_service.dart';
 
+/// 分享内容接收处理页面
+///
+/// 当用户通过系统分享功能将内容发送到本应用时，此页面负责：
+/// 1. 接收并展示分享的文本/图片内容
+/// 2. 调用 AI 服务分析内容，识别内容类型
+/// 3. 展示分析结果（类型、置信度、结构化数据）
+/// 4. 用户确认后保存到记忆流，或选择忽略
 class ShareReceiverScreen extends StatefulWidget {
+  /// 分享的文本内容（可选）
   final String? sharedText;
+
+  /// 分享的图片路径列表（可选）
   final List<String>? sharedImages;
 
   const ShareReceiverScreen({
@@ -22,11 +32,22 @@ class ShareReceiverScreen extends StatefulWidget {
 }
 
 class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
+  /// 分享的文本内容
   String? _sharedText;
+
+  /// 分享的图片路径列表
   List<String> _sharedImages = [];
+
+  /// 是否正在处理中
   bool _isProcessing = false;
+
+  /// 当前状态描述文字
   String _status = '准备处理...';
+
+  /// AI 分析结果
   AnalysisResult? _result;
+
+  /// 从分析结果创建的记忆对象
   Memory? _memory;
 
   @override
@@ -36,11 +57,14 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     _sharedImages = widget.sharedImages ?? [];
     _initShareHandler();
 
+    // 如果已有分享内容，自动开始处理
     if (_sharedText != null || _sharedImages.isNotEmpty) {
       _startProcessing();
     }
   }
 
+  /// 初始化分享处理器
+  /// 检查是否有通过冷启动传入的初始分享内容
   void _initShareHandler() {
     final handler = ShareHandlerPlatform.instance;
     handler.getInitialSharedMedia().then((media) {
@@ -62,6 +86,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     });
   }
 
+  /// 开始 AI 分析处理流程
+  /// 区分图片和文本内容，调用对应的 AI 分析接口
   Future<void> _startProcessing() async {
     if (_isProcessing) return;
     if (_sharedText == null && _sharedImages.isEmpty) {
@@ -79,6 +105,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       AnalysisResult? result;
 
       if (_sharedImages.isNotEmpty) {
+        // 图片分析功能尚未实现，返回占位结果
         setState(() => _status = '图片分析功能开发中...');
         await Future.delayed(const Duration(seconds: 1));
         result = AnalysisResult(
@@ -87,10 +114,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           data: {'reason': '图片分析功能暂未实现'},
         );
       } else if (_sharedText != null) {
+        // 文本分析
         result = await aiProvider.analyzeText(_sharedText!);
       }
 
       if (result != null) {
+        // 创建记忆对象
         final memory = Memory(
           type: getMemoryTypeFromAction(result.action),
           rawContentType: _sharedImages.isNotEmpty
@@ -156,6 +185,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
+  /// 构建来源内容展示区
+  /// 显示用户分享的原始文本和图片信息
   Widget _buildSourceContent() {
     return Card(
       child: Padding(
@@ -205,6 +236,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
+  /// 构建状态展示区
+  /// 显示当前处理状态，处理中时显示加载指示器
   Widget _buildStatusSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -228,6 +261,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
+  /// 构建分析结果展示区
+  /// 显示识别的类型、置信度和结构化数据
   Widget _buildResultSection() {
     return Card(
       child: Padding(
@@ -270,6 +305,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
               ],
             ),
             const Divider(),
+            // 展示结构化数据的键值对
             ..._result!.data.entries.map((entry) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
@@ -297,6 +333,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
+  /// 构建操作按钮区
+  /// 包含"忽略"和"确认保存"两个按钮
   Widget _buildActionButtons() {
     return Row(
       children: [
@@ -327,6 +365,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
+  /// 构建重试按钮（分析失败时显示）
   Widget _buildRetryButton() {
     return Center(
       child: ElevatedButton.icon(
@@ -337,6 +376,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
+  /// 确认保存记忆
+  /// 更新记忆状态为已确认，并根据类型保存到对应模块（账单/待办/日程）
   Future<void> _confirmMemory() async {
     if (_memory == null) return;
 
@@ -345,6 +386,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       MemoryStatus.confirmed,
     );
 
+    // 根据记忆类型保存到对应模块
     switch (_memory!.type) {
       case MemoryType.bill:
         await _saveExpense();
@@ -367,6 +409,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     }
   }
 
+  /// 忽略记忆
+  /// 更新记忆状态为已忽略
   Future<void> _dismissMemory() async {
     if (_memory == null) return;
 
@@ -380,6 +424,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     }
   }
 
+  /// 保存消费记录到账本模块
   Future<void> _saveExpense() async {
     final data = _result!.data;
     final expense = Expense(
@@ -395,6 +440,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     await context.read<ExpenseProvider>().addExpense(expense);
   }
 
+  /// 保存待办事项到待办模块
   Future<void> _saveTodo() async {
     final data = _result!.data;
     final todo = Todo(
@@ -408,6 +454,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     await context.read<TodoProvider>().addTodo(todo);
   }
 
+  /// 保存日程事件（TODO: 对接系统日历）
   Future<void> _saveCalendarEvent() async {
     // TODO: 保存到系统日历
   }

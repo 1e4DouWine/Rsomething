@@ -4,11 +4,30 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../utils/type_helpers.dart';
 
+/// 记忆卡片组件
+///
+/// 展示单条记忆信息的卡片组件，包含：
+/// - 左侧彩色类型指示条
+/// - 头部：类型图标 + 类型标签 + 时间 + 状态标签
+/// - 内容区：原始内容摘要
+/// - AI 识别结果预览（结构化数据）
+/// - 操作按钮（确认/忽略，仅待处理状态显示）
+///
+/// 支持点击缩放动画效果。
 class MemoryCard extends StatefulWidget {
+  /// 记忆数据
   final Memory memory;
+
+  /// 卡片点击回调
   final VoidCallback? onTap;
+
+  /// 确认按钮回调
   final VoidCallback? onConfirm;
+
+  /// 忽略按钮回调
   final VoidCallback? onDismiss;
+
+  /// 删除按钮回调
   final VoidCallback? onDelete;
 
   const MemoryCard({
@@ -26,8 +45,13 @@ class MemoryCard extends StatefulWidget {
 
 class _MemoryCardState extends State<MemoryCard>
     with SingleTickerProviderStateMixin {
+  /// 缩放动画控制器
   late AnimationController _animationController;
+
+  /// 缩放动画（按下时缩小到 0.98，松开恢复）
   late Animation<double> _scaleAnimation;
+
+  /// 是否处于按下状态
   bool _isPressed = false;
 
   @override
@@ -90,6 +114,7 @@ class _MemoryCardState extends State<MemoryCard>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // 左侧类型颜色指示条（渐变效果）
                   Container(
                     width: 6,
                     decoration: BoxDecoration(
@@ -103,19 +128,24 @@ class _MemoryCardState extends State<MemoryCard>
                       ),
                     ),
                   ),
+                  // 右侧内容区域
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 头部：图标 + 类型 + 时间 + 状态 + 删除
                           _buildHeader(theme, typeColor),
                           const SizedBox(height: 16),
+                          // 原始内容摘要
                           _buildContent(theme),
+                          // AI 识别结果预览（仅在有结构化数据时显示）
                           if (widget.memory.structuredData.isNotEmpty) ...[
                             const SizedBox(height: 16),
                             _buildStructuredPreview(theme, typeColor),
                           ],
+                          // 操作按钮（仅待处理状态显示）
                           if (widget.memory.status == MemoryStatus.pending) ...[
                             const SizedBox(height: 20),
                             _buildActions(theme, typeColor),
@@ -133,9 +163,12 @@ class _MemoryCardState extends State<MemoryCard>
     );
   }
 
+  /// 构建卡片头部
+  /// 包含类型图标、类型标签、创建时间、状态标签和删除按钮
   Widget _buildHeader(ThemeData theme, Color typeColor) {
     return Row(
       children: [
+        // 类型图标容器
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -149,6 +182,7 @@ class _MemoryCardState extends State<MemoryCard>
           ),
         ),
         const SizedBox(width: 14),
+        // 类型名称和时间
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +203,9 @@ class _MemoryCardState extends State<MemoryCard>
             ],
           ),
         ),
+        // 状态标签
         _buildStatusChip(theme),
+        // 删除按钮
         if (widget.onDelete != null)
           IconButton(
             onPressed: widget.onDelete,
@@ -189,6 +225,8 @@ class _MemoryCardState extends State<MemoryCard>
     );
   }
 
+  /// 构建状态标签
+  /// 栅记忆状态显示不同的颜色和文字（待处理/已确认/已忽略）
   Widget _buildStatusChip(ThemeData theme) {
     Color color;
     String text;
@@ -241,6 +279,8 @@ class _MemoryCardState extends State<MemoryCard>
     );
   }
 
+  /// 构建内容展示区
+  /// 显示原始内容摘要，最多 3 行，超出部分省略
   Widget _buildContent(ThemeData theme) {
     return Container(
       width: double.infinity,
@@ -251,6 +291,7 @@ class _MemoryCardState extends State<MemoryCard>
       ),
       child: Row(
         children: [
+          // 内容类型图标（文本/图片）
           Icon(
             widget.memory.rawContentType == RawContentType.image
                 ? Icons.image_rounded
@@ -275,6 +316,8 @@ class _MemoryCardState extends State<MemoryCard>
     );
   }
 
+  /// 构建 AI 识别结果预览
+  /// 展示结构化数据的前 3 个字段，以键值对形式排列
   Widget _buildStructuredPreview(ThemeData theme, Color typeColor) {
     final data = widget.memory.structuredData;
 
@@ -292,6 +335,7 @@ class _MemoryCardState extends State<MemoryCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 标题行
           Row(
             children: [
               Icon(
@@ -310,6 +354,7 @@ class _MemoryCardState extends State<MemoryCard>
             ],
           ),
           const SizedBox(height: 12),
+          // 数据字段列表（最多显示 3 个）
           ...data.entries.take(3).map((entry) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -343,9 +388,12 @@ class _MemoryCardState extends State<MemoryCard>
     );
   }
 
+  /// 构建操作按钮区
+  /// 包含"忽略"和"确认"两个按钮，仅在待处理状态显示
   Widget _buildActions(ThemeData theme, Color typeColor) {
     return Row(
       children: [
+        // 忽略按钮（描边样式）
         Expanded(
           child: OutlinedButton.icon(
             onPressed: widget.onDismiss,
@@ -365,6 +413,7 @@ class _MemoryCardState extends State<MemoryCard>
           ),
         ),
         const SizedBox(width: 14),
+        // 确认按钮（填充样式，使用类型颜色）
         Expanded(
           child: ElevatedButton.icon(
             onPressed: widget.onConfirm,
