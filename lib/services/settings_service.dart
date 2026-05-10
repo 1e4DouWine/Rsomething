@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/ai_config_profile.dart';
 
 /// 设置服务
 ///
 /// 基于 SharedPreferences 的本地持久化设置服务。
 /// 使用单例模式，管理应用的所有配置项，包括：
-/// - AI 模型配置（API 地址、密钥、模型名称）
+/// - AI 模型配置（支持多份配置档案，可切换激活）
 /// - 分享行为设置（静默模式）
 /// - 提醒设置（默认提醒时间）
 class SettingsService {
@@ -15,12 +17,16 @@ class SettingsService {
   late SharedPreferences _prefs;
 
   // ==================== 配置键名常量 ====================
+  // 旧版单配置键名（保留用于向后兼容）
   static const String _keyBaseUrl = 'ai_base_url';
   static const String _keyApiKey = 'ai_api_key';
   static const String _keyModelName = 'ai_model_name';
   static const String _keyUseDefaultBackend = 'use_default_backend';
   static const String _keySilentMode = 'silent_mode';
   static const String _keyDefaultReminderMinutes = 'default_reminder_minutes';
+  // 多配置相关键名
+  static const String _keyAiProfiles = 'ai_config_profiles';
+  static const String _keyActiveProfileId = 'ai_active_profile_id';
 
   // ==================== 默认值常量 ====================
   static const String _defaultBaseUrl = 'https://openrouter.ai/api/v1/chat/completions';
@@ -34,19 +40,113 @@ class SettingsService {
   SettingsService._();
 
   /// 获取设置服务单例实例
-  /// 首次调用时会初始化 SharedPreferences
+  /// 首次调用时会初始化 SharedPreferences，并执行旧数据迁移
   static Future<SettingsService> getInstance() async {
     if (_instance == null) {
       _instance = SettingsService._();
       _instance!._prefs = await SharedPreferences.getInstance();
+      await _instance!._migrateToProfiles();
     }
     return _instance!;
   }
 
-  // ==================== AI配置 ====================
+  /// 将旧版单配置迁移到多配置格式
+  /// 仅在首次使用多配置功能时执行，将已有的单配置转为"默认配置"档案
+  Future<void> _migrateToProfiles() async {
+    final profilesJson = _prefs.getString(_keyAiProfiles);
+    // 已有多配置数据，无需迁移
+    if (profilesJson != null && profilesJson.isNotEmpty) return;
+
+    // 读取旧版单配置，创建为"默认配置"档案
+    final existingApiKey = getApiKey();
+    final profile = AiConfigProfile(
+      id: 'default',
+      name: '默认配置',
+      baseUrl: getBaseUrl(),
+      apiKey: existingApiKey,
+      modelName: getModelName(),
+    );
+    await _prefs.setString(_keyAiProfiles, json.encode([profile.toJson()]));
+    await _prefs.setString(_keyActiveProfileId, 'default');
+  }
+
+  // ==================== 多配置管理 ====================
+
+  /// 获取所有 AI 配置档案列表
+  List<AiConfigProfile> getProfiles() {
+    final profilesJson = _prefs.getString(_keyAiProfiles);
+    if (profilesJson == null || profilesJson.isEmpty) return [];
+    final list = json.decode(profilesJson) as List;
+    return list.map((e) => AiConfigProfile.fromJson(e as String)).toList();
+  }
+
+  /// 保存完整的配置档案列表（覆盖写入）
+  Future<void> saveProfiles(List<AiConfigProfile> profiles) async {
+    await _prefs.setString(
+      _keyAiProfiles,
+      json.encode(profiles.map((p) => p.toJson()).toList()),
+    );
+  }
+
+  /// 获取当前激活的配置档案 ID
+  String? getActiveProfileId() {
+    return _prefs.getString(_keyActiveProfileId);
+  }
+
+  /// 设置激活的配置档案
+  Future<void> setActiveProfileId(String id) async {
+    await _prefs.setString(_keyActiveProfileId, id);
+  }
+
+  /// 获取当前激活的配置档案
+  /// 若无激活项则返回第一份，若列表为空返回 null
+  AiConfigProfile? getActiveProfile() {
+    final profiles = getProfiles();
+    final activeId = getActiveProfileId();
+    if (profiles.isEmpty) return null;
+    if (activeId == null) return profiles.first;
+    try {
+      return profiles.firstWhere((p) => p.id == activeId);
+    } catch (_) {
+      return profiles.first;
+    }
+  }
+
+  /// 添加一份新的配置档案
+  Future<void> addProfile(AiConfigProfile profile) async {
+    final profiles = getProfiles();
+    profiles.add(profile);
+    await saveProfiles(profiles);
+  }
+
+  /// 更新指定配置档案（按 ID 匹配）
+  Future<void> updateProfile(AiConfigProfile profile) async {
+    final profiles = getProfiles();
+    final index = profiles.indexWhere((p) => p.id == profile.id);
+    if (index != -1) {
+      profiles[index] = profile;
+      await saveProfiles(profiles);
+    }
+  }
+
+  /// 删除指定配置档案
+  /// 若删除的是当前激活项，则自动切换到列表中的第一份
+  Future<void> deleteProfile(String id) async {
+    final profiles = getProfiles();
+    profiles.removeWhere((p) => p.id == id);
+    await saveProfiles(profiles);
+    if (getActiveProfileId() == id && profiles.isNotEmpty) {
+      await setActiveProfileId(profiles.first.id);
+    }
+  }
+
+  // ==================== 旧版单配置（兼容） ====================
+  // 优先从激活的配置档案中读取，若无则回退到旧版存储
 
   /// 获取 API Base URL
   String getBaseUrl() {
+    final active = getActiveProfile();
+    if (active != null) return active.baseUrl;
     return _prefs.getString(_keyBaseUrl) ?? _defaultBaseUrl;
   }
 
@@ -57,6 +157,8 @@ class SettingsService {
 
   /// 获取 API Key
   String getApiKey() {
+    final active = getActiveProfile();
+    if (active != null) return active.apiKey;
     return _prefs.getString(_keyApiKey) ?? _defaultApiKey;
   }
 
@@ -67,6 +169,8 @@ class SettingsService {
 
   /// 获取模型名称
   String getModelName() {
+    final active = getActiveProfile();
+    if (active != null) return active.modelName;
     return _prefs.getString(_keyModelName) ?? _defaultModelName;
   }
 

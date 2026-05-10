@@ -6,3 +6,4 @@ export 'memory.dart';
 export 'expense.dart';
 export 'todo.dart';
 export 'calendar_event.dart';
+export 'ai_config_profile.dart';

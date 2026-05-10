@@ -68,6 +68,9 @@ class AIService {
   /// AI 配置（未设置时为 null）
   AIConfig? _config;
 
+  /// 获取当前配置（只读）
+  AIConfig? get currentConfig => _config;
+
   /// 私有构造函数，初始化 Dio 并设置超时时间
   AIService._() {
     _dio = Dio();
