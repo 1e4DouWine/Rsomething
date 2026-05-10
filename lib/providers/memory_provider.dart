@@ -78,4 +78,12 @@ class MemoryProvider with ChangeNotifier {
     _filterType = type;
     loadMemories(type: type);
   }
+
+  /// 清空所有内存缓存数据
+  void clearAll() {
+    _memories = [];
+    _filterType = null;
+    _isLoading = false;
+    notifyListeners();
+  }
 }

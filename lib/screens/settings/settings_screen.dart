@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/providers.dart';
 import '../../services/database_service.dart';
 import 'general_settings_screen.dart';
 import 'about_dialog.dart';
@@ -383,6 +385,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _showClearDataDialog() async {
     final colorScheme = Theme.of(context).colorScheme;
     final messenger = ScaffoldMessenger.of(context);
+    // 在 await 之前捕获 Provider 引用，避免异步间隙使用 BuildContext
+    final memoryProvider = context.read<MemoryProvider>();
+    final expenseProvider = context.read<ExpenseProvider>();
+    final todoProvider = context.read<TodoProvider>();
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -414,9 +420,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed == true) {
+      // 清空数据库
       final dbService = DatabaseService();
       await dbService.clearAllData();
+
       if (!context.mounted) return;
+      // 清空各 Provider 的内存缓存，触发 UI 刷新
+      memoryProvider.clearAll();
+      expenseProvider.clearAll();
+      todoProvider.clearAll();
+
       messenger.showSnackBar(
         SnackBar(
           content: const Text('所有数据已清空'),

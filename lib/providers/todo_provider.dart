@@ -55,4 +55,11 @@ class TodoProvider with ChangeNotifier {
     _showCompleted = !_showCompleted;
     loadTodos();
   }
+
+  /// 清空所有内存缓存数据
+  void clearAll() {
+    _todos = [];
+    _showCompleted = false;
+    notifyListeners();
+  }
 }

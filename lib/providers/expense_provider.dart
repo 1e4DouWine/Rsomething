@@ -62,4 +62,14 @@ class ExpenseProvider with ChangeNotifier {
   void changeMonth(int year, int month) {
     loadMonthlyStats(year, month);
   }
+
+  /// 清空所有内存缓存数据
+  void clearAll() {
+    _expenses = [];
+    _monthlyTotal = 0.0;
+    _categoryStats = {};
+    _selectedYear = DateTime.now().year;
+    _selectedMonth = DateTime.now().month;
+    notifyListeners();
+  }
 }
