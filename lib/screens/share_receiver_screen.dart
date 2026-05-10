@@ -1,12 +1,12 @@
+import 'package:share_handler/share_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share_handler/share_handler.dart';
 import 'dart:async';
-import '../models/memory.dart';
-import '../providers/app_providers.dart';
+import '../models/models.dart';
+import '../providers/providers.dart';
+import '../utils/type_helpers.dart';
 import '../services/ai_service.dart';
 
-/// 分享接收处理页面
 class ShareReceiverScreen extends StatefulWidget {
   final String? sharedText;
   final List<String>? sharedImages;
@@ -34,11 +34,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     super.initState();
     _sharedText = widget.sharedText;
     _sharedImages = widget.sharedImages ?? [];
-    
-    // 初始化分享处理器
     _initShareHandler();
 
-    // 如果有初始数据，开始处理
     if (_sharedText != null || _sharedImages.isNotEmpty) {
       _startProcessing();
     }
@@ -82,8 +79,6 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       AnalysisResult? result;
 
       if (_sharedImages.isNotEmpty) {
-        // TODO: 读取图片并转换为Base64
-        // 暂时只处理文本
         setState(() => _status = '图片分析功能开发中...');
         await Future.delayed(const Duration(seconds: 1));
         result = AnalysisResult(
@@ -96,9 +91,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       }
 
       if (result != null) {
-        // 创建记忆
         final memory = Memory(
-          type: _getMemoryType(result.action),
+          type: getMemoryTypeFromAction(result.action),
           rawContentType: _sharedImages.isNotEmpty
               ? RawContentType.image
               : RawContentType.text,
@@ -126,21 +120,6 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         _status = '处理出错: $e';
         _isProcessing = false;
       });
-    }
-  }
-
-  MemoryType _getMemoryType(String action) {
-    switch (action) {
-      case 'add_expense':
-        return MemoryType.bill;
-      case 'add_todo':
-        return MemoryType.todo;
-      case 'add_event':
-        return MemoryType.event;
-      case 'summarize_video':
-        return MemoryType.summary;
-      default:
-        return MemoryType.unknown;
     }
   }
 
@@ -213,9 +192,9 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                 spacing: 8,
                 children: _sharedImages
                     .take(3)
-                    .map((_) => Chip(
-                          avatar: const Icon(Icons.image, size: 18),
-                          label: const Text('图片'),
+                    .map((_) => const Chip(
+                          avatar: Icon(Icons.image, size: 18),
+                          label: Text('图片'),
                         ))
                     .toList(),
               ),
@@ -259,8 +238,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
             Row(
               children: [
                 Icon(
-                  _getTypeIcon(_memory!.type),
-                  color: _getTypeColor(_memory!.type),
+                  getTypeIcon(_memory!.type),
+                  color: getTypeColor(_memory!.type),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -292,26 +271,26 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
             ),
             const Divider(),
             ..._result!.data.entries.map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      '${entry.key}:',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: Text(
+                          '${entry.key}:',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: Text('${entry.value}'),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: Text('${entry.value}'),
-                  ),
-                ],
-              ),
-            )),
+                )),
           ],
         ),
       ),
@@ -358,36 +337,6 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
   }
 
-  IconData _getTypeIcon(MemoryType type) {
-    switch (type) {
-      case MemoryType.bill:
-        return Icons.receipt_long;
-      case MemoryType.todo:
-        return Icons.check_circle_outline;
-      case MemoryType.event:
-        return Icons.event;
-      case MemoryType.summary:
-        return Icons.summarize;
-      case MemoryType.unknown:
-        return Icons.help_outline;
-    }
-  }
-
-  Color _getTypeColor(MemoryType type) {
-    switch (type) {
-      case MemoryType.bill:
-        return Colors.orange;
-      case MemoryType.todo:
-        return Colors.blue;
-      case MemoryType.event:
-        return Colors.green;
-      case MemoryType.summary:
-        return Colors.purple;
-      case MemoryType.unknown:
-        return Colors.grey;
-    }
-  }
-
   Future<void> _confirmMemory() async {
     if (_memory == null) return;
 
@@ -396,7 +345,6 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       MemoryStatus.confirmed,
     );
 
-    // 根据类型执行相应操作
     switch (_memory!.type) {
       case MemoryType.bill:
         await _saveExpense();

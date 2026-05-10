@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../providers/app_providers.dart';
-import '../theme/app_theme.dart';
+import '../../providers/providers.dart';
+import '../../theme/app_theme.dart';
 
-/// 账本页面
-/// 设计特点: 渐变卡片 + 月度统计 + 分类图标列表
 class ExpenseScreen extends StatefulWidget {
   const ExpenseScreen({super.key});
 
@@ -80,7 +78,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
-    
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -128,7 +126,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   Widget _buildMonthSelector(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Container(
@@ -208,7 +206,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   Widget _buildMonthlySummary(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
-    
+
     return FadeTransition(
       opacity: _headerAnimation,
       child: SlideTransition(
@@ -303,7 +301,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
       children: stats.entries.map((entry) {
         final percentage = total > 0 ? (entry.value / total * 100) : 0;
         final color = AppTheme.getCategoryColor(entry.key);
-        
+
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -340,7 +338,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   Widget _buildCategoryLegend(ThemeData theme, ExpenseProvider provider) {
     if (provider.categoryStats.isEmpty) return const SizedBox.shrink();
-    
+
     final colorScheme = theme.colorScheme;
 
     return Padding(
@@ -373,7 +371,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               final color = AppTheme.getCategoryColor(entry.key);
               final total = provider.monthlyTotal;
               final percentage = total > 0 ? (entry.value / total * 100) : 0;
-              
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -408,7 +406,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                                 '¥${entry.value.toStringAsFixed(2)}',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -438,7 +436,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   Widget _buildExpenseList(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
-    
+
     if (provider.expenses.isEmpty) {
       return SliverFillRemaining(
         child: Center(
@@ -491,7 +489,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
           (context, index) {
             final expense = provider.expenses[index];
             final color = AppTheme.getCategoryColor(expense.category);
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Container(

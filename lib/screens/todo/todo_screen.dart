@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../providers/app_providers.dart';
-import '../models/memory.dart';
+import '../../providers/providers.dart';
+import '../../models/models.dart';
+import 'add_todo_sheet.dart';
+import 'todo_detail_dialog.dart';
 
-/// 待办页面
-/// 设计特点: 滑动操作 + 进度统计 + 柔和动画
 class TodoScreen extends StatefulWidget {
   const TodoScreen({super.key});
 
@@ -66,7 +66,7 @@ class _TodoScreenState extends State<TodoScreen>
       floatingActionButton: ScaleTransition(
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
-          onPressed: () => _showAddTodoDialog(context),
+          onPressed: () => _showAddTodoSheet(context),
           backgroundColor: colorScheme.primaryContainer,
           foregroundColor: colorScheme.onPrimaryContainer,
           elevation: 4,
@@ -85,7 +85,7 @@ class _TodoScreenState extends State<TodoScreen>
 
   Widget _buildHeader(ThemeData theme, TodoProvider provider) {
     final colorScheme = theme.colorScheme;
-    
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -113,7 +113,6 @@ class _TodoScreenState extends State<TodoScreen>
                 ],
               ),
             ),
-            // 显示/隐藏已完成切换
             Container(
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerLow,
@@ -176,7 +175,6 @@ class _TodoScreenState extends State<TodoScreen>
           ),
           child: Row(
             children: [
-              // 圆形进度指示器
               SizedBox(
                 width: 80,
                 height: 80,
@@ -207,8 +205,6 @@ class _TodoScreenState extends State<TodoScreen>
                 ),
               ),
               const SizedBox(width: 24),
-              
-              // 统计信息
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +271,7 @@ class _TodoScreenState extends State<TodoScreen>
 
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(48),
@@ -314,7 +310,7 @@ class _TodoScreenState extends State<TodoScreen>
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: () => _showAddTodoDialog(context),
+              onPressed: () => _showAddTodoSheet(context),
               icon: const Icon(Icons.add_rounded),
               label: const Text('添加待办'),
               style: ElevatedButton.styleFrom(
@@ -409,7 +405,6 @@ class _TodoScreenState extends State<TodoScreen>
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  // 自定义Checkbox
                   GestureDetector(
                     onTap: () {
                       provider.toggleCompletion(todo.id!, !todo.isCompleted);
@@ -442,8 +437,6 @@ class _TodoScreenState extends State<TodoScreen>
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
-                  // 内容
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,410 +510,19 @@ class _TodoScreenState extends State<TodoScreen>
     );
   }
 
-  void _showAddTodoDialog(BuildContext context) {
-    final TextEditingController titleController = TextEditingController();
-    DateTime? selectedDate;
-
+  void _showAddTodoSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          final theme = Theme.of(context);
-          final colorScheme = theme.colorScheme;
-          
-          return Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            ),
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-              left: 24,
-              right: 24,
-              top: 12,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 拖拽指示器
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: colorScheme.outline,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // 标题
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: colorScheme.primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      '添加待办',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                
-                // 输入框
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    hintText: '输入待办事项...',
-                    prefixIcon: Icon(
-                      Icons.edit_rounded,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 16),
-                
-                // 日期选择
-                Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.calendar_today_rounded,
-                    color: selectedDate != null
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
-                  ),
-                  title: Text(
-                    selectedDate != null
-                        ? DateFormat('yyyy年MM月dd日 HH:mm').format(selectedDate!)
-                        : '设置截止时间（可选）',
-                    style: TextStyle(
-                      fontFamily: 'NotoSansSC',
-                      color: selectedDate != null
-                          ? colorScheme.onSurface
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  trailing: selectedDate != null
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.clear_rounded,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () {
-                            setState(() => selectedDate = null);
-                          },
-                        )
-                      : null,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      builder: (context, child) {
-                        return Theme(
-                          data: theme.copyWith(
-                            colorScheme: colorScheme.copyWith(
-                              primary: colorScheme.primary,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (date != null) {
-                      if (!context.mounted) return;
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.now(),
-                        builder: (context, child) {
-                          return Theme(
-                            data: theme.copyWith(
-                              colorScheme: colorScheme.copyWith(
-                                primary: colorScheme.primary,
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (time != null) {
-                        setState(() {
-                          selectedDate = DateTime(
-                            date.year,
-                            date.month,
-                            date.day,
-                            time.hour,
-                            time.minute,
-                          );
-                        });
-                      }
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // 添加按钮
-              ElevatedButton(
-                onPressed: () async {
-                  final title = titleController.text.trim();
-                  if (title.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('请输入待办内容'),
-                        backgroundColor: colorScheme.error,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final memory = Memory(
-                    type: MemoryType.todo,
-                    rawContentType: RawContentType.text,
-                    rawContentSummary: title,
-                    structuredData: {
-                      'title': title,
-                      if (selectedDate != null)
-                        'due_date': selectedDate!.toIso8601String(),
-                      'reminder': true,
-                    },
-                    status: MemoryStatus.confirmed,
-                  );
-
-                  final memoryProvider = context.read<MemoryProvider>();
-                  final memoryId = await memoryProvider.addMemory(memory);
-
-                  if (!context.mounted) return;
-                  final todo = Todo(
-                    memoryId: memoryId,
-                    title: title,
-                    dueDate: selectedDate,
-                  );
-
-                  await context.read<TodoProvider>().addTodo(todo);
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 4,
-                  shadowColor: colorScheme.primary.withValues(alpha: 0.4),
-                ),
-                child: const Text(
-                  '添加待办',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        );
-        },
-      ),
+      builder: (context) => const AddTodoSheet(),
     );
   }
 
   void _showTodoDetail(BuildContext context, Todo todo) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 头部
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      todo.isCompleted
-                          ? Icons.check_circle_rounded
-                          : Icons.radio_button_unchecked_rounded,
-                      color: todo.isCompleted
-                          ? colorScheme.primary
-                          : colorScheme.primary,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          todo.isCompleted ? '已完成' : '待完成',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        if (todo.dueDate != null)
-                          Text(
-                            DateFormat('yyyy-MM-dd HH:mm').format(todo.dueDate!),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              
-              // 标题
-              Text(
-                todo.title,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // 详情
-              if (todo.dueDate != null) ...[
-                _buildDetailRow(
-                  context,
-                  Icons.access_time_rounded,
-                  '截止时间',
-                  DateFormat('yyyy年MM月dd日 HH:mm').format(todo.dueDate!),
-                ),
-                const SizedBox(height: 12),
-              ],
-              _buildDetailRow(
-                context,
-                todo.isCompleted
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                '状态',
-                todo.isCompleted ? '已完成' : '未完成',
-              ),
-              const SizedBox(height: 12),
-              _buildDetailRow(
-                context,
-                todo.reminder
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_off_rounded,
-                '提醒',
-                todo.reminder ? '已开启' : '未开启',
-              ),
-              const SizedBox(height: 28),
-              
-              // 关闭按钮
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text('关闭'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ],
+      builder: (context) => TodoDetailDialog(todo: todo),
     );
   }
 }

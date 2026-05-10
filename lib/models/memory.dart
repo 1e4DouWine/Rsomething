@@ -1,4 +1,5 @@
-/// 记忆类型枚举
+import 'dart:convert';
+
 enum MemoryType {
   bill('bill', '账单'),
   todo('todo', '待办'),
@@ -18,7 +19,6 @@ enum MemoryType {
   }
 }
 
-/// 原始内容类型
 enum RawContentType {
   text('text', '文本'),
   image('image', '图片'),
@@ -36,7 +36,6 @@ enum RawContentType {
   }
 }
 
-/// 记忆状态
 enum MemoryStatus {
   pending('pending', '待处理'),
   confirmed('confirmed', '已确认'),
@@ -54,7 +53,6 @@ enum MemoryStatus {
   }
 }
 
-/// 记忆数据模型
 class Memory {
   final int? id;
   final MemoryType type;
@@ -82,7 +80,7 @@ class Memory {
       'type': type.value,
       'raw_content_type': rawContentType.value,
       'raw_content_summary': rawContentSummary,
-      'structured_data': structuredData.toString(), // JSON字符串
+      'structured_data': json.encode(structuredData),
       'created_at': createdAt.toIso8601String(),
       'status': status.value,
       'source_app': sourceApp,
@@ -105,7 +103,10 @@ class Memory {
   static Map<String, dynamic> _parseStructuredData(String? data) {
     if (data == null || data.isEmpty) return {};
     try {
-      // 简单的JSON解析，实际项目中应使用dart:convert
+      final decoded = json.decode(data);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
       return {};
     } catch (e) {
       return {};
@@ -131,137 +132,6 @@ class Memory {
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
       sourceApp: sourceApp ?? this.sourceApp,
-    );
-  }
-}
-
-/// 账单数据模型
-class Expense {
-  final int? id;
-  final int memoryId;
-  final double amount;
-  final String currency;
-  final String category;
-  final DateTime date;
-  final String? note;
-
-  Expense({
-    this.id,
-    required this.memoryId,
-    required this.amount,
-    this.currency = 'CNY',
-    required this.category,
-    DateTime? date,
-    this.note,
-  }) : date = date ?? DateTime.now();
-
-  Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'memory_id': memoryId,
-      'amount': amount,
-      'currency': currency,
-      'category': category,
-      'date': date.toIso8601String(),
-      'note': note,
-    };
-  }
-
-  factory Expense.fromMap(Map<String, dynamic> map) {
-    return Expense(
-      id: map['id'] as int?,
-      memoryId: map['memory_id'] as int,
-      amount: (map['amount'] as num).toDouble(),
-      currency: map['currency'] as String? ?? 'CNY',
-      category: map['category'] as String? ?? '其他',
-      date: DateTime.parse(map['date'] as String),
-      note: map['note'] as String?,
-    );
-  }
-}
-
-/// 待办数据模型
-class Todo {
-  final int? id;
-  final int memoryId;
-  final String title;
-  final DateTime? dueDate;
-  final bool isCompleted;
-  final bool reminder;
-
-  Todo({
-    this.id,
-    required this.memoryId,
-    required this.title,
-    this.dueDate,
-    this.isCompleted = false,
-    this.reminder = true,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'memory_id': memoryId,
-      'title': title,
-      'due_date': dueDate?.toIso8601String(),
-      'is_completed': isCompleted ? 1 : 0,
-      'reminder': reminder ? 1 : 0,
-    };
-  }
-
-  factory Todo.fromMap(Map<String, dynamic> map) {
-    return Todo(
-      id: map['id'] as int?,
-      memoryId: map['memory_id'] as int,
-      title: map['title'] as String,
-      dueDate: map['due_date'] != null ? DateTime.parse(map['due_date'] as String) : null,
-      isCompleted: (map['is_completed'] as int?) == 1,
-      reminder: (map['reminder'] as int?) == 1,
-    );
-  }
-}
-
-/// 日程事件数据模型
-class CalendarEvent {
-  final int? id;
-  final int memoryId;
-  final String title;
-  final DateTime startTime;
-  final DateTime endTime;
-  final String? location;
-  final String? notes;
-
-  CalendarEvent({
-    this.id,
-    required this.memoryId,
-    required this.title,
-    required this.startTime,
-    DateTime? endTime,
-    this.location,
-    this.notes,
-  }) : endTime = endTime ?? startTime.add(const Duration(hours: 1));
-
-  Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'memory_id': memoryId,
-      'title': title,
-      'start_time': startTime.toIso8601String(),
-      'end_time': endTime.toIso8601String(),
-      'location': location,
-      'notes': notes,
-    };
-  }
-
-  factory CalendarEvent.fromMap(Map<String, dynamic> map) {
-    return CalendarEvent(
-      id: map['id'] as int?,
-      memoryId: map['memory_id'] as int,
-      title: map['title'] as String,
-      startTime: DateTime.parse(map['start_time'] as String),
-      endTime: DateTime.parse(map['end_time'] as String),
-      location: map['location'] as String?,
-      notes: map['notes'] as String?,
     );
   }
 }

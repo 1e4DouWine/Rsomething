@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/memory.dart';
+import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../utils/type_helpers.dart';
 
-/// 记忆卡片组件
-/// 设计特点: 类型色彩条 + 渐变背景 + 浮动操作按钮
 class MemoryCard extends StatefulWidget {
   final Memory memory;
   final VoidCallback? onTap;
@@ -91,7 +90,6 @@ class _MemoryCardState extends State<MemoryCard>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 左侧类型色彩条
                   Container(
                     width: 6,
                     decoration: BoxDecoration(
@@ -105,8 +103,6 @@ class _MemoryCardState extends State<MemoryCard>
                       ),
                     ),
                   ),
-                  
-                  // 主要内容
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(20),
@@ -140,7 +136,6 @@ class _MemoryCardState extends State<MemoryCard>
   Widget _buildHeader(ThemeData theme, Color typeColor) {
     return Row(
       children: [
-        // 类型图标
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -148,14 +143,12 @@ class _MemoryCardState extends State<MemoryCard>
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
-            _getTypeIcon(widget.memory.type),
+            getTypeIcon(widget.memory.type),
             color: typeColor,
             size: 24,
           ),
         ),
         const SizedBox(width: 14),
-        
-        // 类型和时间
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,27 +163,23 @@ class _MemoryCardState extends State<MemoryCard>
               Text(
                 DateFormat('MM月dd日 HH:mm').format(widget.memory.createdAt),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textTertiary,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
         ),
-        
-        // 状态标签
         _buildStatusChip(theme),
-        
-        // 删除按钮
         if (widget.onDelete != null)
           IconButton(
             onPressed: widget.onDelete,
             icon: Icon(
               Icons.delete_outline_rounded,
               size: 20,
-              color: AppTheme.errorColor.withValues(alpha: 0.6),
+              color: theme.colorScheme.error.withValues(alpha: 0.6),
             ),
             style: IconButton.styleFrom(
-              backgroundColor: AppTheme.errorColor.withValues(alpha: 0.08),
+              backgroundColor: theme.colorScheme.error.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -217,7 +206,7 @@ class _MemoryCardState extends State<MemoryCard>
         icon = Icons.check_circle_rounded;
         break;
       case MemoryStatus.dismissed:
-        color = AppTheme.textTertiary;
+        color = theme.colorScheme.onSurfaceVariant;
         text = '已忽略';
         icon = Icons.close_rounded;
         break;
@@ -257,7 +246,7 @@ class _MemoryCardState extends State<MemoryCard>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.backgroundColor,
+        color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -267,7 +256,7 @@ class _MemoryCardState extends State<MemoryCard>
                 ? Icons.image_rounded
                 : Icons.text_snippet_rounded,
             size: 18,
-            color: AppTheme.textTertiary,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -276,7 +265,7 @@ class _MemoryCardState extends State<MemoryCard>
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textPrimary,
+                color: theme.colorScheme.onSurface,
                 height: 1.5,
               ),
             ),
@@ -322,33 +311,33 @@ class _MemoryCardState extends State<MemoryCard>
           ),
           const SizedBox(height: 12),
           ...data.entries.take(3).map((entry) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    entry.key,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w500,
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 60,
+                      child: Text(
+                        entry.key,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    '${entry.value}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textPrimary,
+                    Expanded(
+                      child: Text(
+                        '${entry.value}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
@@ -363,13 +352,13 @@ class _MemoryCardState extends State<MemoryCard>
             icon: const Icon(Icons.close_rounded, size: 18),
             label: const Text('忽略'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.textSecondary,
+              foregroundColor: theme.colorScheme.onSurfaceVariant,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               side: BorderSide(
-                color: AppTheme.dividerColor,
+                color: theme.colorScheme.outlineVariant,
                 width: 1.5,
               ),
             ),
@@ -395,20 +384,5 @@ class _MemoryCardState extends State<MemoryCard>
         ),
       ],
     );
-  }
-
-  IconData _getTypeIcon(MemoryType type) {
-    switch (type) {
-      case MemoryType.bill:
-        return Icons.receipt_long_rounded;
-      case MemoryType.todo:
-        return Icons.check_circle_outline_rounded;
-      case MemoryType.event:
-        return Icons.event_rounded;
-      case MemoryType.summary:
-        return Icons.summarize_rounded;
-      case MemoryType.unknown:
-        return Icons.help_outline_rounded;
-    }
   }
 }

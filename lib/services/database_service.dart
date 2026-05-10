@@ -1,21 +1,18 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/memory.dart';
+import '../models/models.dart';
 
-/// 数据库服务
 class DatabaseService {
   static Database? _database;
   static const String _dbName = 'rs_database.db';
   static const int _dbVersion = 1;
 
-  /// 获取数据库实例
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
-  /// 初始化数据库
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), _dbName);
     return await openDatabase(
@@ -25,9 +22,7 @@ class DatabaseService {
     );
   }
 
-  /// 创建数据库表
   Future<void> _onCreate(Database db, int version) async {
-    // 记忆表
     await db.execute('''
       CREATE TABLE memories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +36,6 @@ class DatabaseService {
       )
     ''');
 
-    // 账单表
     await db.execute('''
       CREATE TABLE expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +49,6 @@ class DatabaseService {
       )
     ''');
 
-    // 待办表
     await db.execute('''
       CREATE TABLE todos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +61,6 @@ class DatabaseService {
       )
     ''');
 
-    // 日程事件表
     await db.execute('''
       CREATE TABLE calendar_events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,18 +77,16 @@ class DatabaseService {
 
   // ==================== 记忆操作 ====================
 
-  /// 插入记忆
   Future<int> insertMemory(Memory memory) async {
     final db = await database;
     return await db.insert('memories', memory.toMap());
   }
 
-  /// 获取所有记忆（按时间倒序）
   Future<List<Memory>> getAllMemories({MemoryType? type}) async {
     final db = await database;
     String? where;
     List<dynamic>? whereArgs;
-    
+
     if (type != null) {
       where = 'type = ?';
       whereArgs = [type.value];
@@ -112,7 +102,6 @@ class DatabaseService {
     return maps.map((map) => Memory.fromMap(map)).toList();
   }
 
-  /// 根据ID获取记忆
   Future<Memory?> getMemoryById(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -125,7 +114,6 @@ class DatabaseService {
     return Memory.fromMap(maps.first);
   }
 
-  /// 更新记忆状态
   Future<void> updateMemoryStatus(int id, MemoryStatus status) async {
     final db = await database;
     await db.update(
@@ -136,13 +124,11 @@ class DatabaseService {
     );
   }
 
-  /// 删除记忆
   Future<void> deleteMemory(int id) async {
     final db = await database;
     await db.delete('memories', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// 搜索记忆
   Future<List<Memory>> searchMemories(String query) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -157,13 +143,11 @@ class DatabaseService {
 
   // ==================== 账单操作 ====================
 
-  /// 插入账单
   Future<int> insertExpense(Expense expense) async {
     final db = await database;
     return await db.insert('expenses', expense.toMap());
   }
 
-  /// 获取所有账单
   Future<List<Expense>> getAllExpenses() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -174,7 +158,6 @@ class DatabaseService {
     return maps.map((map) => Expense.fromMap(map)).toList();
   }
 
-  /// 获取月度账单总额
   Future<double> getMonthlyExpenseTotal(int year, int month) async {
     final db = await database;
     final startDate = DateTime(year, month, 1).toIso8601String();
@@ -188,7 +171,6 @@ class DatabaseService {
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
-  /// 获取分类账单统计
   Future<Map<String, double>> getCategoryExpenses(int year, int month) async {
     final db = await database;
     final startDate = DateTime(year, month, 1).toIso8601String();
@@ -209,13 +191,11 @@ class DatabaseService {
 
   // ==================== 待办操作 ====================
 
-  /// 插入待办
   Future<int> insertTodo(Todo todo) async {
     final db = await database;
     return await db.insert('todos', todo.toMap());
   }
 
-  /// 获取所有待办
   Future<List<Todo>> getAllTodos({bool? completed}) async {
     final db = await database;
     String? where;
@@ -236,7 +216,6 @@ class DatabaseService {
     return maps.map((map) => Todo.fromMap(map)).toList();
   }
 
-  /// 更新待办完成状态
   Future<void> updateTodoCompletion(int id, bool isCompleted) async {
     final db = await database;
     await db.update(
@@ -247,7 +226,6 @@ class DatabaseService {
     );
   }
 
-  /// 删除待办
   Future<void> deleteTodo(int id) async {
     final db = await database;
     await db.delete('todos', where: 'id = ?', whereArgs: [id]);
@@ -255,13 +233,11 @@ class DatabaseService {
 
   // ==================== 日程操作 ====================
 
-  /// 插入日程事件
   Future<int> insertCalendarEvent(CalendarEvent event) async {
     final db = await database;
     return await db.insert('calendar_events', event.toMap());
   }
 
-  /// 获取所有日程事件
   Future<List<CalendarEvent>> getAllCalendarEvents() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -272,7 +248,6 @@ class DatabaseService {
     return maps.map((map) => CalendarEvent.fromMap(map)).toList();
   }
 
-  /// 删除日程事件
   Future<void> deleteCalendarEvent(int id) async {
     final db = await database;
     await db.delete('calendar_events', where: 'id = ?', whereArgs: [id]);
@@ -280,7 +255,6 @@ class DatabaseService {
 
   // ==================== 统计操作 ====================
 
-  /// 获取记忆类型统计
   Future<Map<MemoryType, int>> getMemoryTypeStats() async {
     final db = await database;
     final result = await db.rawQuery('''
@@ -295,7 +269,6 @@ class DatabaseService {
     return stats;
   }
 
-  /// 清空所有数据
   Future<void> clearAllData() async {
     final db = await database;
     await db.delete('calendar_events');
