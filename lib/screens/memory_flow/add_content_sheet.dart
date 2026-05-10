@@ -63,7 +63,7 @@ class _AddContentSheetState extends State<AddContentSheet>
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -147,7 +147,7 @@ class _AddContentSheetState extends State<AddContentSheet>
               minLines: 3,
               decoration: InputDecoration(
                 hintText: '输入或粘贴内容...\n例如：今天午饭花了35元',
-                hintStyle: TextStyle(
+                hintStyle: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   height: 1.5,
                 ),
@@ -197,10 +197,9 @@ class _AddContentSheetState extends State<AddContentSheet>
                       children: [
                         const Icon(Icons.auto_awesome, size: 20),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           '智能分析',
-                          style: TextStyle(
-                            fontSize: 16,
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),

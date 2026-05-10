@@ -90,10 +90,9 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           foregroundColor: colorScheme.onPrimaryContainer,
           elevation: 4,
           icon: const Icon(Icons.auto_awesome, size: 20),
-          label: const Text(
+          label: Text(
             '新记忆',
-            style: TextStyle(
-              fontFamily: 'NotoSansSC',
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -140,7 +139,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: colorScheme.shadow.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -195,8 +194,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
       child: FilterChip(
         label: Text(
           label,
-          style: TextStyle(
-            fontFamily: 'NotoSansSC',
+          style: theme.textTheme.labelLarge?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
           ),
@@ -377,7 +375,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               '取消',
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
           ),
           ElevatedButton(

@@ -188,6 +188,9 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 构建来源内容展示区
   /// 显示用户分享的原始文本和图片信息
   Widget _buildSourceContent() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -196,10 +199,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           children: [
             Text(
               '分享内容',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
@@ -207,7 +208,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -239,6 +240,9 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 构建状态展示区
   /// 显示当前处理状态，处理中时显示加载指示器
   Widget _buildStatusSection() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -252,9 +256,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         ],
         Text(
           _status,
-          style: TextStyle(
-            fontSize: 16,
-            color: _isProcessing ? Colors.blue : Colors.grey[700],
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: _isProcessing ? colorScheme.primary : colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -264,6 +267,9 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 构建分析结果展示区
   /// 显示识别的类型、置信度和结构化数据
   Widget _buildResultSection() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -279,8 +285,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                 const SizedBox(width: 8),
                 Text(
                   '识别为: ${_memory!.type.label}',
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -291,21 +296,19 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '置信度: ${(_result!.confidence * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue[700],
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
               ],
             ),
             const Divider(),
-            // 展示结构化数据的键值对
             ..._result!.data.entries.map((entry) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
@@ -315,8 +318,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                         width: 80,
                         child: Text(
                           '${entry.key}:',
-                          style: TextStyle(
-                            color: Colors.grey[600],
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -336,6 +339,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 构建操作按钮区
   /// 包含"忽略"和"确认保存"两个按钮
   Widget _buildActionButtons() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Expanded(
@@ -356,8 +361,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
             label: const Text('确认保存'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.all(16),
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
             ),
           ),
         ),

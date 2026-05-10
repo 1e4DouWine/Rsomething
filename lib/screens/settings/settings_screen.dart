@@ -111,10 +111,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'RS 智能助手',
-                    style: TextStyle(
-                      fontFamily: 'NotoSansSC',
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       color: colorScheme.onPrimary,
-                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
@@ -128,10 +126,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     child: Text(
                       'v1.0.0',
-                      style: TextStyle(
-                        fontFamily: 'NotoSansSC',
+                      style: theme.textTheme.labelMedium?.copyWith(
                         color: colorScheme.onPrimary.withValues(alpha: 0.9),
-                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -156,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: colorScheme.shadow.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -234,7 +230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: colorScheme.shadow.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -405,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('取消', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+            child: Text('取消', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),

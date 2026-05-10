@@ -71,7 +71,7 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('取消', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                        child: Text('取消', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -115,7 +115,6 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
       appBar: AppBar(
         title: const Text('AI 模型配置'),
         backgroundColor: colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -189,7 +188,7 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                       : Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: colorScheme.shadow.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -476,7 +475,6 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
       appBar: AppBar(
         title: Text(_isEditing ? '编辑配置' : '新增配置'),
         backgroundColor: colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
         actions: [
           // 编辑模式下显示删除按钮
           if (_isEditing)
@@ -495,7 +493,7 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: Text('取消', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+              child: Text('取消', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(ctx, true),

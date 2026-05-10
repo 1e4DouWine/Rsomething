@@ -25,7 +25,6 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
       appBar: AppBar(
         title: const Text('设置'),
         backgroundColor: colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
@@ -51,7 +50,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: colorScheme.shadow.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -135,20 +134,20 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 区块标题
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 区块标题
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                 child: Row(
                   children: [
                     Icon(Icons.tune_rounded, color: colorScheme.onSurfaceVariant, size: 20),

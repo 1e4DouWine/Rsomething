@@ -152,7 +152,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: colorScheme.shadow.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -261,11 +261,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               children: [
                 Text(
                   '本月支出',
-                  style: TextStyle(
-                    fontFamily: 'NotoSansSC',
+                  style: theme.textTheme.titleSmall?.copyWith(
                     color: colorScheme.onPrimary.withValues(alpha: 0.8),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -277,10 +274,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   builder: (context, value, child) {
                     return Text(
                       '¥${value.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontFamily: 'NotoSansSC',
+                      style: theme.textTheme.displayMedium?.copyWith(
                         color: colorScheme.onPrimary,
-                        fontSize: 42,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -2,
                       ),
@@ -316,6 +311,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   /// 构建分类统计标签
   /// 以 Wrap 布局展示各分类的颜色圆点、名称和百分比
   Widget _buildCategoryStats(ThemeData theme, ExpenseProvider provider) {
+    final colorScheme = theme.colorScheme;
     final stats = provider.categoryStats;
     final total = stats.values.fold(0.0, (sum, value) => sum + value);
 
@@ -348,11 +344,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
             const SizedBox(width: 8),
             Text(
               '${entry.key} ${percentage.toStringAsFixed(0)}%',
-              style: const TextStyle(
-                fontFamily: 'NotoSansSC',
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.onPrimary,
               ),
             ),
           ],
@@ -377,7 +370,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: colorScheme.shadow.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -531,7 +524,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: colorScheme.shadow.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),

@@ -34,9 +34,6 @@ class AppTheme {
   /// 警告/待处理状态颜色
   static const Color warningColor = Color(0xFFFF9800);
 
-  /// 错误/危险状态颜色
-  static const Color errorColor = Color(0xFFE53935);
-
   /// 信息提示颜色
   static const Color infoColor = Color(0xFF2196F3);
 
@@ -49,6 +46,7 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       fontFamily: 'NotoSansSC',
+      extensions: const [AppColors.light],
     );
   }
 
@@ -61,6 +59,7 @@ class AppTheme {
         brightness: Brightness.dark,
       ),
       fontFamily: 'NotoSansSC',
+      extensions: const [AppColors.dark],
     );
   }
 
@@ -97,5 +96,92 @@ class AppTheme {
       default:
         return const Color(0xFF95A5A6);
     }
+  }
+}
+
+/// 应用自定义颜色扩展（ThemeExtension）
+///
+/// 通过 Theme.of(context).extension\<AppColors\>() 访问，
+/// 确保自定义颜色在亮色/暗色模式下自动适配。
+@immutable
+class AppColors extends ThemeExtension<AppColors> {
+  const AppColors({
+    required this.billColor,
+    required this.todoColor,
+    required this.eventColor,
+    required this.summaryColor,
+    required this.unknownColor,
+    required this.successColor,
+    required this.warningColor,
+    required this.infoColor,
+  });
+
+  final Color billColor;
+  final Color todoColor;
+  final Color eventColor;
+  final Color summaryColor;
+  final Color unknownColor;
+  final Color successColor;
+  final Color warningColor;
+  final Color infoColor;
+
+  static const light = AppColors(
+    billColor: Color(0xFFFF6B6B),
+    todoColor: Color(0xFF4ECDC4),
+    eventColor: Color(0xFF45B7D1),
+    summaryColor: Color(0xFF96CEB4),
+    unknownColor: Color(0xFF95A5A6),
+    successColor: Color(0xFF4CAF50),
+    warningColor: Color(0xFFFF9800),
+    infoColor: Color(0xFF2196F3),
+  );
+
+  static const dark = AppColors(
+    billColor: Color(0xFFFF8A80),
+    todoColor: Color(0xFF64FFDA),
+    eventColor: Color(0xFF80DEEA),
+    summaryColor: Color(0xFFA5D6A7),
+    unknownColor: Color(0xFFB0BEC5),
+    successColor: Color(0xFF66BB6A),
+    warningColor: Color(0xFFFFB74D),
+    infoColor: Color(0xFF64B5F6),
+  );
+
+  @override
+  AppColors copyWith({
+    Color? billColor,
+    Color? todoColor,
+    Color? eventColor,
+    Color? summaryColor,
+    Color? unknownColor,
+    Color? successColor,
+    Color? warningColor,
+    Color? infoColor,
+  }) {
+    return AppColors(
+      billColor: billColor ?? this.billColor,
+      todoColor: todoColor ?? this.todoColor,
+      eventColor: eventColor ?? this.eventColor,
+      summaryColor: summaryColor ?? this.summaryColor,
+      unknownColor: unknownColor ?? this.unknownColor,
+      successColor: successColor ?? this.successColor,
+      warningColor: warningColor ?? this.warningColor,
+      infoColor: infoColor ?? this.infoColor,
+    );
+  }
+
+  @override
+  AppColors lerp(AppColors? other, double t) {
+    if (other is! AppColors) return this;
+    return AppColors(
+      billColor: Color.lerp(billColor, other.billColor, t)!,
+      todoColor: Color.lerp(todoColor, other.todoColor, t)!,
+      eventColor: Color.lerp(eventColor, other.eventColor, t)!,
+      summaryColor: Color.lerp(summaryColor, other.summaryColor, t)!,
+      unknownColor: Color.lerp(unknownColor, other.unknownColor, t)!,
+      successColor: Color.lerp(successColor, other.successColor, t)!,
+      warningColor: Color.lerp(warningColor, other.warningColor, t)!,
+      infoColor: Color.lerp(infoColor, other.infoColor, t)!,
+    );
   }
 }

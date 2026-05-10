@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
+import '../theme/app_theme.dart';
 
 /// 根据 AI 分析的动作类型字符串转换为 MemoryType 枚举
 /// [action] AI 返回的动作类型标识符
@@ -36,18 +37,7 @@ IconData getTypeIcon(MemoryType type) {
 }
 
 /// 根据 MemoryType 获取对应的主题色
-/// 用于记忆卡片的视觉区分
+/// 委托给 AppTheme.getMemoryTypeColor 以保持颜色一致性
 Color getTypeColor(MemoryType type) {
-  switch (type) {
-    case MemoryType.bill:
-      return Colors.orange;
-    case MemoryType.todo:
-      return Colors.blue;
-    case MemoryType.event:
-      return Colors.green;
-    case MemoryType.summary:
-      return Colors.purple;
-    case MemoryType.unknown:
-      return Colors.grey;
-  }
+  return AppTheme.getMemoryTypeColor(type.value);
 }

@@ -86,10 +86,9 @@ class _TodoScreenState extends State<TodoScreen>
           foregroundColor: colorScheme.onPrimaryContainer,
           elevation: 4,
           icon: const Icon(Icons.add_rounded, size: 20),
-          label: const Text(
+          label: Text(
             '新待办',
-            style: TextStyle(
-              fontFamily: 'NotoSansSC',
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -137,7 +136,7 @@ class _TodoScreenState extends State<TodoScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: colorScheme.shadow.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -215,10 +214,8 @@ class _TodoScreenState extends State<TodoScreen>
                     ),
                     Text(
                       '${(progress * 100).toInt()}%',
-                      style: TextStyle(
-                        fontFamily: 'NotoSansSC',
+                      style: theme.textTheme.titleLarge?.copyWith(
                         color: colorScheme.onPrimary,
-                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -233,20 +230,15 @@ class _TodoScreenState extends State<TodoScreen>
                   children: [
                     Text(
                       '完成进度',
-                      style: TextStyle(
-                        fontFamily: 'NotoSansSC',
+                      style: theme.textTheme.titleSmall?.copyWith(
                         color: colorScheme.onPrimary.withValues(alpha: 0.7),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '$completed / $total',
-                      style: TextStyle(
-                        fontFamily: 'NotoSansSC',
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         color: colorScheme.onPrimary,
-                        fontSize: 28,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -1,
                       ),
@@ -254,10 +246,8 @@ class _TodoScreenState extends State<TodoScreen>
                     const SizedBox(height: 4),
                     Text(
                       '已完成 / 总计',
-                      style: TextStyle(
-                        fontFamily: 'NotoSansSC',
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onPrimary.withValues(alpha: 0.7),
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -395,7 +385,7 @@ class _TodoScreenState extends State<TodoScreen>
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(
                   '取消',
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
               ElevatedButton(
@@ -420,7 +410,7 @@ class _TodoScreenState extends State<TodoScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: colorScheme.shadow.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -519,9 +509,7 @@ class _TodoScreenState extends State<TodoScreen>
                                   ),
                                   child: Text(
                                     '已过期',
-                                    style: TextStyle(
-                                      fontFamily: 'NotoSansSC',
-                                      fontSize: 10,
+                                    style: theme.textTheme.labelSmall?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: colorScheme.error,
                                     ),

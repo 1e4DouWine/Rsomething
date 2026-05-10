@@ -118,8 +118,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
                 _selectedDate != null
                     ? DateFormat('yyyy年MM月dd日 HH:mm').format(_selectedDate!)
                     : '设置截止时间（可选）',
-                style: TextStyle(
-                  fontFamily: 'NotoSansSC',
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: _selectedDate != null
                       ? colorScheme.onSurface
                       : colorScheme.onSurfaceVariant,
@@ -156,10 +155,9 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
               elevation: 4,
               shadowColor: colorScheme.primary.withValues(alpha: 0.4),
             ),
-            child: const Text(
+            child: Text(
               '添加待办',
-              style: TextStyle(
-                fontSize: 16,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
