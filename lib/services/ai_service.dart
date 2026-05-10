@@ -113,12 +113,12 @@ class AIService {
             {'role': 'user', 'content': userPrompt},
           ],
           'temperature': 0.1,
-          'response_format': {'type': 'json_object'},
         },
       );
 
       final content = response.data['choices'][0]['message']['content'];
-      final jsonResult = json.decode(content);
+      final jsonStr = _extractJson(content);
+      final jsonResult = json.decode(jsonStr);
       return AnalysisResult.fromJson(jsonResult);
     } on DioException catch (e) {
       throw Exception('AI分析失败: ${e.message}');
