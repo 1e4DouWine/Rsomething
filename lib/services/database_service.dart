@@ -202,11 +202,11 @@ class DatabaseService {
   Future<double> getMonthlyExpenseTotal(int year, int month) async {
     final db = await database;
     final startDate = DateTime(year, month, 1).toIso8601String();
-    final endDate = DateTime(year, month + 1, 0).toIso8601String();
+    final endDate = DateTime(year, month + 1, 1).toIso8601String();
 
     final result = await db.rawQuery('''
       SELECT SUM(amount) as total FROM expenses
-      WHERE date >= ? AND date <= ?
+      WHERE date >= ? AND date < ?
     ''', [startDate, endDate]);
 
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
@@ -217,11 +217,11 @@ class DatabaseService {
   Future<Map<String, double>> getCategoryExpenses(int year, int month) async {
     final db = await database;
     final startDate = DateTime(year, month, 1).toIso8601String();
-    final endDate = DateTime(year, month + 1, 0).toIso8601String();
+    final endDate = DateTime(year, month + 1, 1).toIso8601String();
 
     final result = await db.rawQuery('''
       SELECT category, SUM(amount) as total FROM expenses
-      WHERE date >= ? AND date <= ?
+      WHERE date >= ? AND date < ?
       GROUP BY category
     ''', [startDate, endDate]);
 

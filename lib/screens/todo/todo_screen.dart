@@ -81,6 +81,7 @@ class _TodoScreenState extends State<TodoScreen>
       floatingActionButton: ScaleTransition(
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
+          heroTag: 'todoFab',
           onPressed: () => _showAddTodoSheet(context),
           backgroundColor: colorScheme.primaryContainer,
           foregroundColor: colorScheme.onPrimaryContainer,

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/database_service.dart';
+import '../services/notification_service.dart';
 
 /// 待办事项状态管理器
 ///
@@ -32,21 +33,26 @@ class TodoProvider with ChangeNotifier {
   }
 
   /// 添加新待办事项
-  Future<void> addTodo(Todo todo) async {
-    await _dbService.insertTodo(todo);
+  Future<int> addTodo(Todo todo) async {
+    final id = await _dbService.insertTodo(todo);
     await loadTodos();
+    return id;
   }
 
   /// 切换待办事项的完成状态
   /// [id] 待办 ID，[isCompleted] 目标完成状态
   Future<void> toggleCompletion(int id, bool isCompleted) async {
     await _dbService.updateTodoCompletion(id, isCompleted);
+    if (isCompleted) {
+      await NotificationService.instance.cancelTodoReminder(id);
+    }
     await loadTodos();
   }
 
   /// 删除待办事项
   Future<void> deleteTodo(int id) async {
     await _dbService.deleteTodo(id);
+    await NotificationService.instance.cancelTodoReminder(id);
     await loadTodos();
   }
 

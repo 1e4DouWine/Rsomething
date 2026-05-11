@@ -85,6 +85,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
       floatingActionButton: ScaleTransition(
         scale: _fabScaleAnimation,
         child: FloatingActionButton.extended(
+          heroTag: 'memoryFlowFab',
           onPressed: _showAddDialog,
           backgroundColor: colorScheme.primaryContainer,
           foregroundColor: colorScheme.onPrimaryContainer,
@@ -291,54 +292,56 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.auto_awesome_outlined,
-                size: 56,
-                color: colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              '还没有记忆',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '点击下方按钮或分享内容到 RS\n开始你的智能记忆之旅',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _showAddDialog,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('添加第一条记忆'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_awesome_outlined,
+                  size: 56,
+                  color: colorScheme.primary,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              Text(
+                '还没有记忆',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '点击下方按钮或分享内容到 RS\n开始你的智能记忆之旅',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: _showAddDialog,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('添加第一条记忆'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -417,37 +420,53 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   /// 确认记忆
   /// 将记忆状态更新为已确认，并根据类型保存到对应模块
   Future<void> _confirmMemory(Memory memory) async {
-    await context.read<MemoryProvider>().updateStatus(
-      memory.id!,
-      MemoryStatus.confirmed,
-    );
-
-    switch (memory.type) {
-      case MemoryType.bill:
-        await _saveExpense(memory);
-        break;
-      case MemoryType.todo:
-        await _saveTodo(memory);
-        break;
-      case MemoryType.event:
-        await _saveCalendarEvent(memory);
-        break;
-      default:
-        break;
-    }
-
-    if (mounted) {
-      final colorScheme = Theme.of(context).colorScheme;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('已确认并保存'),
-          backgroundColor: colorScheme.primary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+    try {
+      await context.read<MemoryProvider>().updateStatus(
+        memory.id!,
+        MemoryStatus.confirmed,
       );
+
+      switch (memory.type) {
+        case MemoryType.bill:
+          await _saveExpense(memory);
+          break;
+        case MemoryType.todo:
+          await _saveTodo(memory);
+          break;
+        case MemoryType.event:
+          await _saveCalendarEvent(memory);
+          break;
+        default:
+          break;
+      }
+
+      if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('已确认并保存'),
+            backgroundColor: colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('保存失败: $e'),
+            backgroundColor: colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -467,14 +486,27 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   /// 从记忆结构化数据中提取并保存消费记录
   Future<void> _saveExpense(Memory memory) async {
     final data = memory.structuredData;
+
+    double amount = 0.0;
+    final rawAmount = data['amount'];
+    if (rawAmount is num) {
+      amount = rawAmount.toDouble();
+    } else if (rawAmount is String) {
+      amount = double.tryParse(rawAmount.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
+    }
+
+    DateTime date = DateTime.now();
+    final rawDate = data['date'];
+    if (rawDate is String) {
+      date = DateTime.tryParse(rawDate) ?? DateTime.now();
+    }
+
     final expense = Expense(
       memoryId: memory.id!,
-      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      amount: amount,
       currency: data['currency'] as String? ?? 'CNY',
       category: data['category'] as String? ?? '其他',
-      date: data['date'] != null
-          ? DateTime.parse(data['date'] as String)
-          : DateTime.now(),
+      date: date,
       note: data['note'] as String?,
     );
     await context.read<ExpenseProvider>().addExpense(expense);

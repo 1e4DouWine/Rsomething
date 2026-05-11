@@ -1,11 +1,15 @@
 import 'package:share_handler/share_handler.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'dart:convert';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../utils/type_helpers.dart';
 import '../services/ai_service.dart';
+import '../services/notification_service.dart';
+import '../services/settings_service.dart';
 
 /// 分享内容接收处理页面
 ///
@@ -21,11 +25,7 @@ class ShareReceiverScreen extends StatefulWidget {
   /// 分享的图片路径列表（可选）
   final List<String>? sharedImages;
 
-  const ShareReceiverScreen({
-    super.key,
-    this.sharedText,
-    this.sharedImages,
-  });
+  const ShareReceiverScreen({super.key, this.sharedText, this.sharedImages});
 
   @override
   State<ShareReceiverScreen> createState() => _ShareReceiverScreenState();
@@ -105,14 +105,11 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       AnalysisResult? result;
 
       if (_sharedImages.isNotEmpty) {
-        // 图片分析功能尚未实现，返回占位结果
-        setState(() => _status = '图片分析功能开发中...');
-        await Future.delayed(const Duration(seconds: 1));
-        result = AnalysisResult(
-          action: 'unknown',
-          confidence: 0.0,
-          data: {'reason': '图片分析功能暂未实现'},
-        );
+        setState(() => _status = '正在压缩图片...');
+        final base64Image = await _compressImageToBase64(_sharedImages.first);
+        if (!mounted) return;
+        setState(() => _status = '正在分析图片内容...');
+        result = await aiProvider.analyzeImage(base64Image, text: _sharedText);
       } else if (_sharedText != null) {
         // 文本分析
         result = await aiProvider.analyzeText(_sharedText!);
@@ -150,6 +147,22 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         _isProcessing = false;
       });
     }
+  }
+
+  Future<String> _compressImageToBase64(String imagePath) async {
+    final compressed = await FlutterImageCompress.compressWithFile(
+      imagePath,
+      minWidth: 1600,
+      minHeight: 1600,
+      quality: 80,
+      format: CompressFormat.jpeg,
+    );
+
+    if (compressed == null || compressed.isEmpty) {
+      throw Exception('图片读取或压缩失败');
+    }
+
+    return base64Encode(compressed);
   }
 
   @override
@@ -224,10 +237,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                 spacing: 8,
                 children: _sharedImages
                     .take(3)
-                    .map((_) => const Chip(
-                          avatar: Icon(Icons.image, size: 18),
-                          label: Text('图片'),
-                        ))
+                    .map(
+                      (_) => const Chip(
+                        avatar: Icon(Icons.image, size: 18),
+                        label: Text('图片'),
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -257,7 +272,9 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         Text(
           _status,
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: _isProcessing ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            color: _isProcessing
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -309,27 +326,27 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
               ],
             ),
             const Divider(),
-            ..._result!.data.entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          '${entry.key}:',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
+            ..._result!.data.entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        '${entry.key}:',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      Expanded(
-                        child: Text('${entry.value}'),
-                      ),
-                    ],
-                  ),
-                )),
+                    ),
+                    Expanded(child: Text('${entry.value}')),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -348,9 +365,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
             onPressed: _dismissMemory,
             icon: const Icon(Icons.close),
             label: const Text('忽略'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.all(16),
-            ),
+            style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
           ),
         ),
         const SizedBox(width: 16),
@@ -386,31 +401,43 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   Future<void> _confirmMemory() async {
     if (_memory == null) return;
 
-    await context.read<MemoryProvider>().updateStatus(
-      _memory!.id!,
-      MemoryStatus.confirmed,
-    );
-
-    // 根据记忆类型保存到对应模块
-    switch (_memory!.type) {
-      case MemoryType.bill:
-        await _saveExpense();
-        break;
-      case MemoryType.todo:
-        await _saveTodo();
-        break;
-      case MemoryType.event:
-        await _saveCalendarEvent();
-        break;
-      default:
-        break;
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已保存到记忆流')),
+    try {
+      await context.read<MemoryProvider>().updateStatus(
+        _memory!.id!,
+        MemoryStatus.confirmed,
       );
-      Navigator.of(context).pop();
+
+      // 根据记忆类型保存到对应模块
+      switch (_memory!.type) {
+        case MemoryType.bill:
+          await _saveExpense();
+          break;
+        case MemoryType.todo:
+          await _saveTodo();
+          break;
+        case MemoryType.event:
+          await _saveCalendarEvent();
+          break;
+        default:
+          break;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已保存到记忆流')));
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        final colorScheme = Theme.of(context).colorScheme;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('保存失败: $e'),
+            backgroundColor: colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -432,14 +459,28 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 保存消费记录到账本模块
   Future<void> _saveExpense() async {
     final data = _result!.data;
+
+    double amount = 0.0;
+    final rawAmount = data['amount'];
+    if (rawAmount is num) {
+      amount = rawAmount.toDouble();
+    } else if (rawAmount is String) {
+      amount =
+          double.tryParse(rawAmount.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
+    }
+
+    DateTime date = DateTime.now();
+    final rawDate = data['date'];
+    if (rawDate is String) {
+      date = DateTime.tryParse(rawDate) ?? DateTime.now();
+    }
+
     final expense = Expense(
       memoryId: _memory!.id!,
-      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      amount: amount,
       currency: data['currency'] as String? ?? 'CNY',
       category: data['category'] as String? ?? '其他',
-      date: data['date'] != null
-          ? DateTime.parse(data['date'] as String)
-          : DateTime.now(),
+      date: date,
       note: data['note'] as String?,
     );
     await context.read<ExpenseProvider>().addExpense(expense);
@@ -456,7 +497,19 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           : null,
       reminder: data['reminder'] as bool? ?? true,
     );
-    await context.read<TodoProvider>().addTodo(todo);
+    final todoId = await context.read<TodoProvider>().addTodo(todo);
+
+    if (todo.reminder && todo.dueDate != null) {
+      final settings = await SettingsService.getInstance();
+      final reminderAt = todo.dueDate!.subtract(
+        Duration(minutes: settings.getDefaultReminderMinutes()),
+      );
+      await NotificationService.instance.scheduleTodoReminder(
+        todoId: todoId,
+        title: todo.title,
+        scheduledAt: reminderAt,
+      );
+    }
   }
 
   /// 保存日程事件（TODO: 对接系统日历）

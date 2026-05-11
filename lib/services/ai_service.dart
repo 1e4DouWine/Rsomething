@@ -200,7 +200,11 @@ class AIService {
   /// 构建系统提示词
   /// 定义 AI 的角色和输出格式要求，指导模型按指定 JSON 结构返回分析结果
   String _buildSystemPrompt() {
-    return '''你是一个智能内容分析助手。请分析用户分享的内容，并返回JSON格式的分析结果。
+    final now = DateTime.now();
+    final currentDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    return '''你是一个智能内容分析助手。当前日期是$currentDate，当前时间是$currentTime。请根据当前日期理解"今天"、"昨天"、"前天"等相对时间表述。请分析用户分享的内容，并返回JSON格式的分析结果。
 
 返回格式：
 {
@@ -211,13 +215,13 @@ class AIService {
 
 动作类型说明：
 1. add_expense（账单）- 当内容包含消费、支出、账单、小票等信息时
-   data字段：amount(金额), currency(币种，默认CNY), category(分类：餐饮/交通/购物/娱乐/其他), date(日期，格式YYYY-MM-DD), note(备注)
+   data字段：amount(金额), currency(币种，默认CNY), category(分类：正餐/服饰/运动/购物/零食/交通/娱乐/日用/缴费/人情/教育/医疗/美妆/保险/宠物/旅行/转账/投资/购物/服务/公益/其他), date(日期，格式YYYY-MM-DD，默认为今天$currentDate), note(备注)
 
 2. add_todo（待办）- 当内容包含待办事项、取件码、提醒等信息时
    data字段：title(标题), due_date(截止日期，可选), reminder(是否提醒，默认true)
 
 3. add_event（日程）- 当内容包含会议、活动、日程等信息时
-   data字段：title(标题), start_time(开始时间，ISO8601), end_time(结束时间，可选), location(地点，可选), notes(备注，可选)
+   data字段：title(标题), start_time(开始时间，ISO8601), end_time(结束时间，可选), location(地点，可选), notes(备注)
 
 4. unknown（未知）- 无法识别内容类型时
    data字段：reason(原因)

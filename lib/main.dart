@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_handler/share_handler.dart';
+import 'services/notification_service.dart';
 import 'services/settings_service.dart';
 import 'app.dart';
 
@@ -16,14 +17,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 设置状态栏样式：透明背景、深色图标
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-    statusBarBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ),
+  );
 
   // 初始化设置服务单例
   final settingsService = await SettingsService.getInstance();
+  await NotificationService.instance.initialize();
 
   // 获取通过系统分享启动应用时的初始媒体内容
   SharedMedia? initialMedia;
@@ -34,8 +38,7 @@ void main() async {
   }
 
   // 启动应用
-  runApp(MyApp(
-    settingsService: settingsService,
-    initialSharedMedia: initialMedia,
-  ));
+  runApp(
+    MyApp(settingsService: settingsService, initialSharedMedia: initialMedia),
+  );
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/ai_config_profile.dart';
 
@@ -16,6 +17,12 @@ class SettingsService {
   /// SharedPreferences 实例
   late SharedPreferences _prefs;
 
+  /// 系统安全存储，用于保存 API Key 等敏感信息
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  /// API Key 内存缓存，让现有同步 getter 不需要扩散成异步调用
+  final Map<String, String> _secureApiKeys = {};
+
   // ==================== 配置键名常量 ====================
   // 旧版单配置键名（保留用于向后兼容）
   static const String _keyBaseUrl = 'ai_base_url';
@@ -27,9 +34,11 @@ class SettingsService {
   // 多配置相关键名
   static const String _keyAiProfiles = 'ai_config_profiles';
   static const String _keyActiveProfileId = 'ai_active_profile_id';
+  static const String _secureApiKeyPrefix = 'ai_profile_api_key_';
 
   // ==================== 默认值常量 ====================
-  static const String _defaultBaseUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  static const String _defaultBaseUrl =
+      'https://openrouter.ai/api/v1/chat/completions';
   static const String _defaultApiKey = '';
   static const String _defaultModelName = 'minimax/minimax-m2.5:free';
   static const bool _defaultUseDefaultBackend = false;
@@ -46,6 +55,8 @@ class SettingsService {
       _instance = SettingsService._();
       _instance!._prefs = await SharedPreferences.getInstance();
       await _instance!._migrateToProfiles();
+      await _instance!._migrateApiKeysToSecureStorage();
+      await _instance!._loadSecureApiKeys();
     }
     return _instance!;
   }
@@ -70,21 +81,115 @@ class SettingsService {
     await _prefs.setString(_keyActiveProfileId, 'default');
   }
 
+  /// 将旧版明文 API Key 迁移到系统安全存储，并从 SharedPreferences 中移除。
+  Future<void> _migrateApiKeysToSecureStorage() async {
+    final legacyApiKey = _prefs.getString(_keyApiKey) ?? '';
+    final profiles = _readProfilesFromPrefs();
+    if (profiles.isEmpty) return;
+
+    final hasPlainTextProfileKey = profiles.any(
+      (profile) => profile.apiKey.isNotEmpty,
+    );
+    if (legacyApiKey.isEmpty && !hasPlainTextProfileKey) return;
+
+    final migratedProfiles = <AiConfigProfile>[];
+    for (final profile in profiles) {
+      final existingSecureKey = await _secureStorage.read(
+        key: _secureApiKey(profile.id),
+      );
+      final shouldUseLegacyKey =
+          profile.id == 'default' && legacyApiKey.isNotEmpty;
+      final apiKey = profile.apiKey.isNotEmpty
+          ? profile.apiKey
+          : shouldUseLegacyKey &&
+                (existingSecureKey == null || existingSecureKey.isEmpty)
+          ? legacyApiKey
+          : existingSecureKey ?? '';
+      migratedProfiles.add(profile.copyWith(apiKey: apiKey));
+    }
+
+    await saveProfiles(migratedProfiles);
+    await _prefs.remove(_keyApiKey);
+  }
+
+  /// 初始化时从系统安全存储加载所有配置档案的 API Key
+  Future<void> _loadSecureApiKeys() async {
+    _secureApiKeys.clear();
+    for (final profile in _readProfilesFromPrefs()) {
+      final apiKey = await _secureStorage.read(key: _secureApiKey(profile.id));
+      if (apiKey != null && apiKey.isNotEmpty) {
+        _secureApiKeys[profile.id] = apiKey;
+      }
+    }
+  }
+
+  String _secureApiKey(String profileId) => '$_secureApiKeyPrefix$profileId';
+
+  Future<void> _writeSecureApiKey(String profileId, String apiKey) async {
+    final key = _secureApiKey(profileId);
+    if (apiKey.isEmpty) {
+      await _secureStorage.delete(key: key);
+      _secureApiKeys.remove(profileId);
+      return;
+    }
+
+    await _secureStorage.write(key: key, value: apiKey);
+    _secureApiKeys[profileId] = apiKey;
+  }
+
+  Future<void> _deleteSecureApiKey(String profileId) async {
+    await _secureStorage.delete(key: _secureApiKey(profileId));
+    _secureApiKeys.remove(profileId);
+  }
+
+  List<AiConfigProfile> _readProfilesFromPrefs() {
+    final profilesJson = _prefs.getString(_keyAiProfiles);
+    if (profilesJson == null || profilesJson.isEmpty) return [];
+
+    final decoded = json.decode(profilesJson);
+    if (decoded is! List) return [];
+
+    final profiles = <AiConfigProfile>[];
+    for (final item in decoded) {
+      if (item is String) {
+        profiles.add(AiConfigProfile.fromJson(item));
+      } else if (item is Map) {
+        profiles.add(AiConfigProfile.fromMap(Map<String, dynamic>.from(item)));
+      }
+    }
+    return profiles;
+  }
+
   // ==================== 多配置管理 ====================
 
   /// 获取所有 AI 配置档案列表
   List<AiConfigProfile> getProfiles() {
-    final profilesJson = _prefs.getString(_keyAiProfiles);
-    if (profilesJson == null || profilesJson.isEmpty) return [];
-    final list = json.decode(profilesJson) as List;
-    return list.map((e) => AiConfigProfile.fromJson(e as String)).toList();
+    return _readProfilesFromPrefs()
+        .map(
+          (profile) => profile.copyWith(
+            apiKey: _secureApiKeys[profile.id] ?? profile.apiKey,
+          ),
+        )
+        .toList();
   }
 
   /// 保存完整的配置档案列表（覆盖写入）
   Future<void> saveProfiles(List<AiConfigProfile> profiles) async {
+    final oldIds = _readProfilesFromPrefs().map((p) => p.id).toSet();
+    final newIds = profiles.map((p) => p.id).toSet();
+    for (final removedId in oldIds.difference(newIds)) {
+      await _deleteSecureApiKey(removedId);
+    }
+
+    final sanitizedProfiles = <AiConfigProfile>[];
+    for (final profile in profiles) {
+      await _writeSecureApiKey(profile.id, profile.apiKey);
+      sanitizedProfiles.add(profile.copyWith(apiKey: ''));
+    }
+
     await _prefs.setString(
       _keyAiProfiles,
-      json.encode(profiles.map((p) => p.toJson()).toList()),
+      json.encode(sanitizedProfiles.map((p) => p.toJson()).toList()),
     );
   }
 
@@ -137,6 +242,8 @@ class SettingsService {
     await saveProfiles(profiles);
     if (getActiveProfileId() == id && profiles.isNotEmpty) {
       await setActiveProfileId(profiles.first.id);
+    } else if (profiles.isEmpty) {
+      await _prefs.remove(_keyActiveProfileId);
     }
   }
 
@@ -164,6 +271,12 @@ class SettingsService {
 
   /// 设置 API Key
   Future<void> setApiKey(String key) async {
+    final active = getActiveProfile();
+    if (active != null) {
+      await updateProfile(active.copyWith(apiKey: key));
+      return;
+    }
+
     await _prefs.setString(_keyApiKey, key);
   }
 
@@ -223,6 +336,10 @@ class SettingsService {
 
   /// 清除所有设置（恢复默认值）
   Future<void> clearAll() async {
+    for (final profile in _readProfilesFromPrefs()) {
+      await _deleteSecureApiKey(profile.id);
+    }
     await _prefs.clear();
+    _secureApiKeys.clear();
   }
 }

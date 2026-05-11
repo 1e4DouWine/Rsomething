@@ -48,7 +48,7 @@ class AiConfigProfile {
       id: map['id'] as String,
       name: map['name'] as String,
       baseUrl: map['baseUrl'] as String,
-      apiKey: map['apiKey'] as String,
+      apiKey: map['apiKey'] as String? ?? '',
       modelName: map['modelName'] as String,
     );
   }
