@@ -35,6 +35,9 @@ class DatabaseService {
     return await openDatabase(
       path,
       version: _dbVersion,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: _onCreate,
     );
   }
@@ -105,6 +108,71 @@ class DatabaseService {
   Future<int> insertMemory(Memory memory) async {
     final db = await database;
     return await db.insert('memories', memory.toMap());
+  }
+
+  /// 在同一个事务中插入记忆和关联待办。
+  ///
+  /// 用于手动新增待办，避免出现 Memory 已创建但 Todo 写入失败的不一致状态。
+  Future<int> insertMemoryWithTodo(Memory memory, Todo todo) async {
+    final db = await database;
+    return await db.transaction((txn) async {
+      final memoryId = await txn.insert('memories', memory.toMap());
+      final todoId = await txn.insert(
+        'todos',
+        todo.copyWith(memoryId: memoryId).toMap(),
+      );
+      return todoId;
+    });
+  }
+
+  /// 在同一个事务中确认记忆并写入关联业务记录。
+  ///
+  /// 返回新插入的关联记录 ID；无关联记录或记忆并非待处理状态时返回 null。
+  Future<int?> confirmMemoryWithRelatedRecord({
+    required int memoryId,
+    Expense? expense,
+    Todo? todo,
+    CalendarEvent? calendarEvent,
+  }) async {
+    final db = await database;
+    return await db.transaction((txn) async {
+      final memories = await txn.query(
+        'memories',
+        columns: ['status'],
+        where: 'id = ?',
+        whereArgs: [memoryId],
+        limit: 1,
+      );
+
+      if (memories.isEmpty) {
+        throw StateError('记忆不存在');
+      }
+
+      if (memories.first['status'] != MemoryStatus.pending.value) {
+        return null;
+      }
+
+      int? relatedId;
+      if (expense != null) {
+        relatedId = await txn.insert('expenses', expense.toMap());
+      } else if (todo != null) {
+        relatedId = await txn.insert('todos', todo.toMap());
+      } else if (calendarEvent != null) {
+        relatedId = await txn.insert('calendar_events', calendarEvent.toMap());
+      }
+
+      final updated = await txn.update(
+        'memories',
+        {'status': MemoryStatus.confirmed.value},
+        where: 'id = ? AND status = ?',
+        whereArgs: [memoryId, MemoryStatus.pending.value],
+      );
+      if (updated == 0) {
+        throw StateError('记忆状态已变更，请刷新后重试');
+      }
+
+      return relatedId;
+    });
   }
 
   /// 获取所有记忆记录
@@ -204,10 +272,13 @@ class DatabaseService {
     final startDate = DateTime(year, month, 1).toIso8601String();
     final endDate = DateTime(year, month + 1, 1).toIso8601String();
 
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT SUM(amount) as total FROM expenses
       WHERE date >= ? AND date < ?
-    ''', [startDate, endDate]);
+    ''',
+      [startDate, endDate],
+    );
 
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
@@ -219,11 +290,14 @@ class DatabaseService {
     final startDate = DateTime(year, month, 1).toIso8601String();
     final endDate = DateTime(year, month + 1, 1).toIso8601String();
 
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT category, SUM(amount) as total FROM expenses
       WHERE date >= ? AND date < ?
       GROUP BY category
-    ''', [startDate, endDate]);
+    ''',
+      [startDate, endDate],
+    );
 
     Map<String, double> categoryMap = {};
     for (var row in result) {

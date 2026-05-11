@@ -41,3 +41,47 @@ IconData getTypeIcon(MemoryType type) {
 Color getTypeColor(MemoryType type) {
   return AppTheme.getMemoryTypeColor(type.value);
 }
+
+/// 安全读取金额，无法解析时返回 0。
+double readAmount(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) {
+    final normalized = value
+        .replaceAll(',', '')
+        .replaceAll(RegExp(r'[^0-9.-]'), '');
+    return double.tryParse(normalized) ?? 0.0;
+  }
+  return 0.0;
+}
+
+/// 安全读取日期时间，无法解析时返回 null。
+DateTime? readDateTime(dynamic value) {
+  if (value is DateTime) return value;
+  if (value is String && value.trim().isNotEmpty) {
+    return DateTime.tryParse(value.trim());
+  }
+  return null;
+}
+
+/// 安全读取布尔值，兼容 AI 可能返回的字符串或数字。
+bool readBool(dynamic value, {bool defaultValue = true}) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    switch (value.trim().toLowerCase()) {
+      case 'true':
+      case '1':
+      case 'yes':
+      case 'y':
+      case '是':
+        return true;
+      case 'false':
+      case '0':
+      case 'no':
+      case 'n':
+      case '否':
+        return false;
+    }
+  }
+  return defaultValue;
+}

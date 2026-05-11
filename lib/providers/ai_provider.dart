@@ -32,11 +32,15 @@ class AIProvider with ChangeNotifier {
   /// 从设置服务读取 AI 配置并应用到 AI 服务
   void _initAIConfig() {
     if (_settingsService.isAIConfigured()) {
-      _aiService.setConfig(AIConfig(
-        baseUrl: _settingsService.getBaseUrl(),
-        apiKey: _settingsService.getApiKey(),
-        modelName: _settingsService.getModelName(),
-      ));
+      _aiService.setConfig(
+        AIConfig(
+          baseUrl: _settingsService.getBaseUrl(),
+          apiKey: _settingsService.getApiKey(),
+          modelName: _settingsService.getModelName(),
+        ),
+      );
+    } else {
+      _aiService.clearConfig();
     }
   }
 
@@ -69,7 +73,10 @@ class AIProvider with ChangeNotifier {
   /// 分析图片内容
   /// [base64Image] Base64 编码的图片数据，[text] 可选的附加文本信息
   /// 返回分析结果，失败时返回 null 并设置错误信息
-  Future<AnalysisResult?> analyzeImage(String base64Image, {String? text}) async {
+  Future<AnalysisResult?> analyzeImage(
+    String base64Image, {
+    String? text,
+  }) async {
     _isAnalyzing = true;
     _error = null;
     notifyListeners();

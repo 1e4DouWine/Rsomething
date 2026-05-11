@@ -95,6 +95,13 @@ class AIService {
     };
   }
 
+  /// 清空当前 AI 配置，避免配置删除后继续使用旧的单例状态。
+  void clearConfig() {
+    _config = null;
+    _dio.options.baseUrl = '';
+    _dio.options.headers.clear();
+  }
+
   /// 分析文本内容
   /// [text] 待分析的文本
   /// 返回 [AnalysisResult]，包含动作类型和结构化数据
@@ -131,7 +138,10 @@ class AIService {
   /// 分析图片内容（Base64 编码）
   /// [base64Image] Base64 编码的图片数据，[text] 可选的附加文本信息
   /// 返回 [AnalysisResult]
-  Future<AnalysisResult> analyzeImage(String base64Image, {String? text}) async {
+  Future<AnalysisResult> analyzeImage(
+    String base64Image, {
+    String? text,
+  }) async {
     if (_config == null) {
       throw Exception('AI服务未配置');
     }
@@ -201,8 +211,10 @@ class AIService {
   /// 定义 AI 的角色和输出格式要求，指导模型按指定 JSON 结构返回分析结果
   String _buildSystemPrompt() {
     final now = DateTime.now();
-    final currentDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final currentDate =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final currentTime =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
     return '''你是一个智能内容分析助手。当前日期是$currentDate，当前时间是$currentTime。请根据当前日期理解"今天"、"昨天"、"前天"等相对时间表述。请分析用户分享的内容，并返回JSON格式的分析结果。
 

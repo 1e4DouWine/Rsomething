@@ -65,13 +65,20 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
       builder: (ctx) {
         final colorScheme = Theme.of(ctx).colorScheme;
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: const Text('删除配置'),
           content: Text('确定要删除「${profile.name}」吗？'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-                        child: Text('取消', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+              child: Text(
+                '取消',
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -99,9 +106,7 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
   void _openProfileForm({AiConfigProfile? profile}) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => AiProfileFormScreen(profile: profile),
-      ),
+      MaterialPageRoute(builder: (_) => AiProfileFormScreen(profile: profile)),
     ).then((_) => _loadProfiles());
   }
 
@@ -119,8 +124,8 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _profiles.isEmpty
-              ? _buildEmptyState(theme)
-              : _buildProfileList(theme),
+          ? _buildEmptyState(theme)
+          : _buildProfileList(theme),
       // 新增配置按钮
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openProfileForm(),
@@ -139,16 +144,24 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.smart_toy_outlined, size: 64, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+          Icon(
+            Icons.smart_toy_outlined,
+            size: 64,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 16),
           Text(
             '暂无 AI 配置',
-            style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             '点击右下角按钮添加一份配置',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -185,7 +198,11 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                   // 激活项使用主题色边框
                   border: isActive
                       ? Border.all(color: colorScheme.primary, width: 2)
-                      : Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                      : Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                   boxShadow: [
                     BoxShadow(
                       color: colorScheme.shadow.withValues(alpha: 0.04),
@@ -207,7 +224,9 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                       ),
                       child: Icon(
                         Icons.smart_toy_rounded,
-                        color: isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                        color: isActive
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant,
                         size: 24,
                       ),
                     ),
@@ -224,7 +243,9 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                                   profile.name,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: isActive ? colorScheme.primary : colorScheme.onSurface,
+                                    color: isActive
+                                        ? colorScheme.primary
+                                        : colorScheme.onSurface,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -232,7 +253,10 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                               // "使用中"标签（仅激活项显示）
                               if (isActive)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: colorScheme.primary,
                                     borderRadius: BorderRadius.circular(8),
@@ -261,7 +285,9 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                           Text(
                             profile.baseUrl,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
+                              ),
                               fontSize: 11,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -272,8 +298,13 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
                     const SizedBox(width: 8),
                     // 更多操作菜单（编辑/删除）
                     PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert_rounded, color: colorScheme.onSurfaceVariant),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      icon: Icon(
+                        Icons.more_vert_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       onSelected: (value) {
                         if (value == 'edit') {
                           _openProfileForm(profile: profile);
@@ -387,16 +418,24 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
       // Save current config to restore after test
       final previousConfig = aiService.currentConfig;
       final normalizedUrl = _normalizeBaseUrl(_baseUrlController.text);
-      aiService.setConfig(AIConfig(
-        baseUrl: normalizedUrl,
-        apiKey: _apiKeyController.text.trim(),
-        modelName: _modelNameController.text.trim(),
-      ));
+      bool success = false;
+      try {
+        aiService.setConfig(
+          AIConfig(
+            baseUrl: normalizedUrl,
+            apiKey: _apiKeyController.text.trim(),
+            modelName: _modelNameController.text.trim(),
+          ),
+        );
 
-      final success = await aiService.testConnection();
-      // Restore previous config so the singleton isn't left with test values
-      if (previousConfig != null) {
-        aiService.setConfig(previousConfig);
+        success = await aiService.testConnection();
+      } finally {
+        // Restore previous config so the singleton isn't left with test values
+        if (previousConfig != null) {
+          aiService.setConfig(previousConfig);
+        } else {
+          aiService.clearConfig();
+        }
       }
       if (mounted) {
         final colorScheme = Theme.of(context).colorScheme;
@@ -405,7 +444,9 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
             content: Text(success ? '连接成功！' : '连接失败，请检查配置'),
             backgroundColor: success ? colorScheme.primary : colorScheme.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -455,7 +496,9 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
           SnackBar(
             content: Text(_isEditing ? '配置已更新' : '配置已添加'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         Navigator.pop(context);
@@ -479,7 +522,10 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
           // 编辑模式下显示删除按钮
           if (_isEditing)
             IconButton(
-              icon: Icon(Icons.delete_outline_rounded, color: colorScheme.error),
+              icon: Icon(
+                Icons.delete_outline_rounded,
+                color: colorScheme.error,
+              ),
               onPressed: () async {
                 // 在 await 之前获取 AIProvider 引用，避免跨 async gap 使用 context
                 final aiProvider = context.read<AIProvider>();
@@ -487,13 +533,20 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                   context: context,
                   // 使用 ctx 避免遮蔽外层 context
                   builder: (ctx) => AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                     title: const Text('删除配置'),
                     content: Text('确定要删除「${widget.profile!.name}」吗？'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-              child: Text('取消', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                        child: Text(
+                          '取消',
+                          style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(ctx, true),
@@ -531,7 +584,8 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                 label: '配置名称',
                 hint: '例如：OpenAI、通义千问',
                 icon: Icons.label_outline_rounded,
-                validator: (v) => (v == null || v.trim().isEmpty) ? '请输入配置名称' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? '请输入配置名称' : null,
               ),
               const SizedBox(height: 20),
               // API Base URL
@@ -540,7 +594,8 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                 label: 'API Base URL',
                 hint: 'https://api.openai.com/v1',
                 icon: Icons.link_rounded,
-                validator: (v) => (v == null || v.trim().isEmpty) ? '请输入API地址' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? '请输入API地址' : null,
               ),
               // URL 自动补全提示
               const SizedBox(height: 8),
@@ -562,7 +617,8 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                 hint: 'sk-...',
                 icon: Icons.key_rounded,
                 obscureText: true,
-                validator: (v) => (v == null || v.trim().isEmpty) ? '请输入API Key' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? '请输入API Key' : null,
               ),
               const SizedBox(height: 20),
               // 模型名称
@@ -571,7 +627,8 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                 label: '模型名称',
                 hint: 'gpt-4o-mini',
                 icon: Icons.psychology_rounded,
-                validator: (v) => (v == null || v.trim().isEmpty) ? '请输入模型名称' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? '请输入模型名称' : null,
               ),
               const SizedBox(height: 32),
               // 操作按钮行：测试连接 + 保存
@@ -585,14 +642,19 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                           ? SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colorScheme.primary,
+                              ),
                             )
                           : const Icon(Icons.wifi_tethering_rounded, size: 18),
                       label: Text(_isTesting ? '测试中...' : '测试连接'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colorScheme.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         side: BorderSide(color: colorScheme.outline),
                       ),
                     ),
@@ -606,7 +668,10 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                           ? SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.onPrimary),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colorScheme.onPrimary,
+                              ),
                             )
                           : const Icon(Icons.save_rounded, size: 18),
                       label: Text(_isSaving ? '保存中...' : '保存'),
@@ -614,7 +679,9 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),

@@ -4,6 +4,9 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../widgets/memory_card.dart';
 import '../../theme/app_theme.dart';
+import '../../services/notification_service.dart';
+import '../../services/settings_service.dart';
+import '../../utils/type_helpers.dart';
 import 'add_content_sheet.dart';
 import 'memory_detail_dialog.dart';
 
@@ -197,15 +200,15 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           label,
           style: theme.textTheme.labelLarge?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? colorScheme.onPrimary
+                : colorScheme.onSurfaceVariant,
           ),
         ),
         selected: isSelected,
         onSelected: (selected) {
           setState(() => _selectedType = selected ? type : null);
-          context.read<MemoryProvider>().setFilterType(
-            selected ? type : null,
-          );
+          context.read<MemoryProvider>().setFilterType(selected ? type : null);
         },
         backgroundColor: colorScheme.surfaceContainerLow,
         selectedColor: color,
@@ -219,7 +222,9 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         elevation: isSelected ? 2 : 0,
-        shadowColor: isSelected ? color.withValues(alpha: 0.3) : Colors.transparent,
+        shadowColor: isSelected
+            ? color.withValues(alpha: 0.3)
+            : Colors.transparent,
       ),
     );
   }
@@ -275,10 +280,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            '加载中...',
-            style: theme.textTheme.bodyMedium,
-          ),
+          Text('加载中...', style: theme.textTheme.bodyMedium),
         ],
       ),
     );
@@ -355,9 +357,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
             Icon(Icons.search_rounded, color: colorScheme.primary),
@@ -378,7 +378,9 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               '取消',
-              style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           ElevatedButton(
@@ -420,23 +422,39 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   /// 确认记忆
   /// 将记忆状态更新为已确认，并根据类型保存到对应模块
   Future<void> _confirmMemory(Memory memory) async {
-    try {
-      await context.read<MemoryProvider>().updateStatus(
-        memory.id!,
-        MemoryStatus.confirmed,
-      );
+    final memoryProvider = context.read<MemoryProvider>();
+    final expenseProvider = context.read<ExpenseProvider>();
+    final todoProvider = context.read<TodoProvider>();
 
+    try {
       switch (memory.type) {
         case MemoryType.bill:
-          await _saveExpense(memory);
+          await memoryProvider.confirmWithRelatedRecord(
+            memory.id!,
+            expense: _buildExpense(memory),
+          );
+          await expenseProvider.loadExpenses();
+          await expenseProvider.loadMonthlyStats(
+            expenseProvider.selectedYear,
+            expenseProvider.selectedMonth,
+          );
           break;
         case MemoryType.todo:
-          await _saveTodo(memory);
+          final todo = _buildTodo(memory);
+          final todoId = await memoryProvider.confirmWithRelatedRecord(
+            memory.id!,
+            todo: todo,
+          );
+          await todoProvider.loadTodos();
+          if (todoId != null) {
+            await _scheduleTodoReminder(todo.copyWith(id: todoId));
+          }
           break;
         case MemoryType.event:
-          await _saveCalendarEvent(memory);
+          await memoryProvider.confirmWithRelatedRecord(memory.id!);
           break;
         default:
+          await memoryProvider.confirmWithRelatedRecord(memory.id!);
           break;
       }
 
@@ -483,51 +501,47 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     await context.read<MemoryProvider>().deleteMemory(memory.id!);
   }
 
-  /// 从记忆结构化数据中提取并保存消费记录
-  Future<void> _saveExpense(Memory memory) async {
+  /// 从记忆结构化数据中构建消费记录。
+  Expense _buildExpense(Memory memory) {
     final data = memory.structuredData;
 
-    double amount = 0.0;
-    final rawAmount = data['amount'];
-    if (rawAmount is num) {
-      amount = rawAmount.toDouble();
-    } else if (rawAmount is String) {
-      amount = double.tryParse(rawAmount.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
-    }
-
-    DateTime date = DateTime.now();
-    final rawDate = data['date'];
-    if (rawDate is String) {
-      date = DateTime.tryParse(rawDate) ?? DateTime.now();
-    }
-
-    final expense = Expense(
+    return Expense(
       memoryId: memory.id!,
-      amount: amount,
-      currency: data['currency'] as String? ?? 'CNY',
-      category: data['category'] as String? ?? '其他',
-      date: date,
-      note: data['note'] as String?,
+      amount: readAmount(data['amount']),
+      currency: data['currency']?.toString() ?? 'CNY',
+      category: data['category']?.toString() ?? '其他',
+      date: readDateTime(data['date']) ?? DateTime.now(),
+      note: data['note']?.toString(),
     );
-    await context.read<ExpenseProvider>().addExpense(expense);
   }
 
-  /// 从记忆结构化数据中提取并保存待办事项
-  Future<void> _saveTodo(Memory memory) async {
+  /// 从记忆结构化数据中构建待办事项。
+  Todo _buildTodo(Memory memory) {
     final data = memory.structuredData;
-    final todo = Todo(
+    final title = data['title']?.toString().trim();
+    return Todo(
       memoryId: memory.id!,
-      title: data['title'] as String? ?? '未命名待办',
-      dueDate: data['due_date'] != null
-          ? DateTime.parse(data['due_date'] as String)
-          : null,
-      reminder: data['reminder'] as bool? ?? true,
+      title: title == null || title.isEmpty ? '未命名待办' : title,
+      dueDate: readDateTime(data['due_date']),
+      reminder: readBool(data['reminder']),
     );
-    await context.read<TodoProvider>().addTodo(todo);
   }
 
-  /// 保存日程事件（TODO: 对接系统日历）
-  Future<void> _saveCalendarEvent(Memory memory) async {
-    // TODO: 保存到系统日历
+  Future<void> _scheduleTodoReminder(Todo todo) async {
+    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
+
+    final settings = await SettingsService.getInstance();
+    final reminderAt = todo.dueDate!.subtract(
+      Duration(minutes: settings.getDefaultReminderMinutes()),
+    );
+    try {
+      await NotificationService.instance.scheduleTodoReminder(
+        todoId: todo.id!,
+        title: todo.title,
+        scheduledAt: reminderAt,
+      );
+    } catch (_) {
+      // Reminder scheduling must not roll back already saved content.
+    }
   }
 }

@@ -52,9 +52,30 @@ class Todo {
       id: map['id'] as int?,
       memoryId: map['memory_id'] as int,
       title: map['title'] as String,
-      dueDate: map['due_date'] != null ? DateTime.parse(map['due_date'] as String) : null,
+      dueDate: map['due_date'] != null
+          ? DateTime.parse(map['due_date'] as String)
+          : null,
       isCompleted: (map['is_completed'] as int?) == 1,
       reminder: (map['reminder'] as int?) == 1,
+    );
+  }
+
+  /// 创建当前 Todo 的副本，可选择性覆盖部分字段。
+  Todo copyWith({
+    int? id,
+    int? memoryId,
+    String? title,
+    DateTime? dueDate,
+    bool? isCompleted,
+    bool? reminder,
+  }) {
+    return Todo(
+      id: id ?? this.id,
+      memoryId: memoryId ?? this.memoryId,
+      title: title ?? this.title,
+      dueDate: dueDate ?? this.dueDate,
+      isCompleted: isCompleted ?? this.isCompleted,
+      reminder: reminder ?? this.reminder,
     );
   }
 }

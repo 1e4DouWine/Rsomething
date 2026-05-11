@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
+import '../../services/notification_service.dart';
+import '../../services/settings_service.dart';
 
 /// 添加待办底部弹窗
 ///
@@ -183,9 +185,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
       builder: (context, child) {
         return Theme(
           data: theme.copyWith(
-            colorScheme: colorScheme.copyWith(
-              primary: colorScheme.primary,
-            ),
+            colorScheme: colorScheme.copyWith(primary: colorScheme.primary),
           ),
           child: child!,
         );
@@ -200,9 +200,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
         builder: (context, child) {
           return Theme(
             data: theme.copyWith(
-              colorScheme: colorScheme.copyWith(
-                primary: colorScheme.primary,
-              ),
+              colorScheme: colorScheme.copyWith(primary: colorScheme.primary),
             ),
             child: child!,
           );
@@ -251,27 +249,39 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
       rawContentSummary: title,
       structuredData: {
         'title': title,
-        if (_selectedDate != null)
-          'due_date': _selectedDate!.toIso8601String(),
+        if (_selectedDate != null) 'due_date': _selectedDate!.toIso8601String(),
         'reminder': true,
       },
       status: MemoryStatus.confirmed,
     );
 
+    final todo = Todo(memoryId: 0, title: title, dueDate: _selectedDate);
+
     final memoryProvider = context.read<MemoryProvider>();
-    final memoryId = await memoryProvider.addMemory(memory);
+    final todoProvider = context.read<TodoProvider>();
+    final todoId = await todoProvider.addTodoWithMemory(memory, todo);
+    await memoryProvider.loadMemories(type: memoryProvider.filterType);
+    await _scheduleTodoReminder(todo.copyWith(id: todoId));
 
-    if (!mounted) return;
-
-    // 创建 Todo 记录
-    final todo = Todo(
-      memoryId: memoryId,
-      title: title,
-      dueDate: _selectedDate,
-    );
-
-    await context.read<TodoProvider>().addTodo(todo);
     if (!mounted) return;
     Navigator.pop(context);
+  }
+
+  Future<void> _scheduleTodoReminder(Todo todo) async {
+    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
+
+    final settings = await SettingsService.getInstance();
+    final reminderAt = todo.dueDate!.subtract(
+      Duration(minutes: settings.getDefaultReminderMinutes()),
+    );
+    try {
+      await NotificationService.instance.scheduleTodoReminder(
+        todoId: todo.id!,
+        title: todo.title,
+        scheduledAt: reminderAt,
+      );
+    } catch (_) {
+      // Reminder scheduling must not block the todo from being saved.
+    }
   }
 }

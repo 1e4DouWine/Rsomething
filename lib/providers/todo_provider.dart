@@ -39,6 +39,13 @@ class TodoProvider with ChangeNotifier {
     return id;
   }
 
+  /// 在同一事务中创建关联记忆和待办事项。
+  Future<int> addTodoWithMemory(Memory memory, Todo todo) async {
+    final todoId = await _dbService.insertMemoryWithTodo(memory, todo);
+    await loadTodos();
+    return todoId;
+  }
+
   /// 切换待办事项的完成状态
   /// [id] 待办 ID，[isCompleted] 目标完成状态
   Future<void> toggleCompletion(int id, bool isCompleted) async {

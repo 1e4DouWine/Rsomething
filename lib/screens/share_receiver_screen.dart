@@ -401,24 +401,41 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   Future<void> _confirmMemory() async {
     if (_memory == null) return;
 
-    try {
-      await context.read<MemoryProvider>().updateStatus(
-        _memory!.id!,
-        MemoryStatus.confirmed,
-      );
+    final memory = _memory!;
+    final memoryProvider = context.read<MemoryProvider>();
+    final expenseProvider = context.read<ExpenseProvider>();
+    final todoProvider = context.read<TodoProvider>();
 
-      // 根据记忆类型保存到对应模块
-      switch (_memory!.type) {
+    try {
+      // 根据记忆类型保存到对应模块。状态更新和业务记录写入在同一事务中完成。
+      switch (memory.type) {
         case MemoryType.bill:
-          await _saveExpense();
+          await memoryProvider.confirmWithRelatedRecord(
+            memory.id!,
+            expense: _buildExpense(memory.id!, _result!.data),
+          );
+          await expenseProvider.loadExpenses();
+          await expenseProvider.loadMonthlyStats(
+            expenseProvider.selectedYear,
+            expenseProvider.selectedMonth,
+          );
           break;
         case MemoryType.todo:
-          await _saveTodo();
+          final todo = _buildTodo(memory.id!, _result!.data);
+          final todoId = await memoryProvider.confirmWithRelatedRecord(
+            memory.id!,
+            todo: todo,
+          );
+          await todoProvider.loadTodos();
+          if (todoId != null) {
+            await _scheduleTodoReminder(todo.copyWith(id: todoId));
+          }
           break;
         case MemoryType.event:
-          await _saveCalendarEvent();
+          await memoryProvider.confirmWithRelatedRecord(memory.id!);
           break;
         default:
+          await memoryProvider.confirmWithRelatedRecord(memory.id!);
           break;
       }
 
@@ -456,64 +473,44 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     }
   }
 
-  /// 保存消费记录到账本模块
-  Future<void> _saveExpense() async {
-    final data = _result!.data;
-
-    double amount = 0.0;
-    final rawAmount = data['amount'];
-    if (rawAmount is num) {
-      amount = rawAmount.toDouble();
-    } else if (rawAmount is String) {
-      amount =
-          double.tryParse(rawAmount.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
-    }
-
-    DateTime date = DateTime.now();
-    final rawDate = data['date'];
-    if (rawDate is String) {
-      date = DateTime.tryParse(rawDate) ?? DateTime.now();
-    }
-
-    final expense = Expense(
-      memoryId: _memory!.id!,
-      amount: amount,
-      currency: data['currency'] as String? ?? 'CNY',
-      category: data['category'] as String? ?? '其他',
-      date: date,
-      note: data['note'] as String?,
+  /// 从结构化数据构建消费记录。
+  Expense _buildExpense(int memoryId, Map<String, dynamic> data) {
+    return Expense(
+      memoryId: memoryId,
+      amount: readAmount(data['amount']),
+      currency: data['currency']?.toString() ?? 'CNY',
+      category: data['category']?.toString() ?? '其他',
+      date: readDateTime(data['date']) ?? DateTime.now(),
+      note: data['note']?.toString(),
     );
-    await context.read<ExpenseProvider>().addExpense(expense);
   }
 
-  /// 保存待办事项到待办模块
-  Future<void> _saveTodo() async {
-    final data = _result!.data;
-    final todo = Todo(
-      memoryId: _memory!.id!,
-      title: data['title'] as String? ?? '未命名待办',
-      dueDate: data['due_date'] != null
-          ? DateTime.parse(data['due_date'] as String)
-          : null,
-      reminder: data['reminder'] as bool? ?? true,
+  /// 从结构化数据构建待办事项。
+  Todo _buildTodo(int memoryId, Map<String, dynamic> data) {
+    final title = data['title']?.toString().trim();
+    return Todo(
+      memoryId: memoryId,
+      title: title == null || title.isEmpty ? '未命名待办' : title,
+      dueDate: readDateTime(data['due_date']),
+      reminder: readBool(data['reminder']),
     );
-    final todoId = await context.read<TodoProvider>().addTodo(todo);
+  }
 
-    if (todo.reminder && todo.dueDate != null) {
-      final settings = await SettingsService.getInstance();
-      final reminderAt = todo.dueDate!.subtract(
-        Duration(minutes: settings.getDefaultReminderMinutes()),
-      );
+  Future<void> _scheduleTodoReminder(Todo todo) async {
+    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
+
+    final settings = await SettingsService.getInstance();
+    final reminderAt = todo.dueDate!.subtract(
+      Duration(minutes: settings.getDefaultReminderMinutes()),
+    );
+    try {
       await NotificationService.instance.scheduleTodoReminder(
-        todoId: todoId,
+        todoId: todo.id!,
         title: todo.title,
         scheduledAt: reminderAt,
       );
+    } catch (_) {
+      // Reminder scheduling must not roll back already saved content.
     }
-  }
-
-  /// 保存日程事件（TODO: 对接系统日历）
-  Future<void> _saveCalendarEvent() async {
-    // TODO: 保存到系统日历
   }
 }

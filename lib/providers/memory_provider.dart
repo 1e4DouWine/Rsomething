@@ -61,6 +61,23 @@ class MemoryProvider with ChangeNotifier {
     return id;
   }
 
+  /// 在事务中确认记忆并写入关联业务记录。
+  Future<int?> confirmWithRelatedRecord(
+    int memoryId, {
+    Expense? expense,
+    Todo? todo,
+    CalendarEvent? calendarEvent,
+  }) async {
+    final relatedId = await _dbService.confirmMemoryWithRelatedRecord(
+      memoryId: memoryId,
+      expense: expense,
+      todo: todo,
+      calendarEvent: calendarEvent,
+    );
+    await loadMemories(type: _filterType);
+    return relatedId;
+  }
+
   /// 更新记忆状态（确认/忽略）
   Future<void> updateStatus(int id, MemoryStatus status) async {
     await _dbService.updateMemoryStatus(id, status);
