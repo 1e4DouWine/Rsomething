@@ -207,6 +207,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
         },
       );
       if (time != null) {
+        if (!mounted) return;
         setState(() {
           _selectedDate = DateTime(
             date.year,

@@ -369,6 +369,28 @@ class DatabaseService {
     await db.delete('todos', where: 'id = ?', whereArgs: [id]);
   }
 
+  /// 删除待办及其关联的记忆。
+  ///
+  /// 外键只配置了从 memories 到 todos 的级联删除，因此从待办页删除时需要
+  /// 先找到父级 memory，再删除父级记录来保持两边一致。
+  Future<void> deleteTodoWithMemory(int id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'todos',
+        columns: ['memory_id'],
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+
+      if (rows.isEmpty) return;
+
+      final memoryId = rows.first['memory_id'] as int;
+      await txn.delete('memories', where: 'id = ?', whereArgs: [memoryId]);
+    });
+  }
+
   // ==================== 日程操作 ====================
 
   /// 插入一条日程事件
@@ -418,9 +440,22 @@ class DatabaseService {
   /// 按照外键依赖顺序删除：先子表后主表
   Future<void> clearAllData() async {
     final db = await database;
-    await db.delete('calendar_events');
-    await db.delete('todos');
-    await db.delete('expenses');
-    await db.delete('memories');
+    await db.transaction((txn) async {
+      await txn.delete('calendar_events');
+      await txn.delete('todos');
+      await txn.delete('expenses');
+      await txn.delete('memories');
+    });
+  }
+
+  /// 关闭当前数据库连接。
+  ///
+  /// 主要用于测试隔离，也可在需要显式释放数据库连接时调用。
+  Future<void> close() async {
+    final db = _database;
+    if (db == null) return;
+
+    await db.close();
+    _database = null;
   }
 }

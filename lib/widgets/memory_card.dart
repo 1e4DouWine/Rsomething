@@ -48,10 +48,7 @@ class MemoryCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      typeColor,
-                      typeColor.withValues(alpha: 0.6),
-                    ],
+                    colors: [typeColor, typeColor.withValues(alpha: 0.6)],
                   ),
                 ),
               ),
@@ -83,7 +80,11 @@ class MemoryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(ThemeData theme, ColorScheme colorScheme, Color typeColor) {
+  Widget _buildHeader(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    Color typeColor,
+  ) {
     return Row(
       children: [
         Container(
@@ -92,11 +93,7 @@ class MemoryCard extends StatelessWidget {
             color: typeColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Icon(
-            getTypeIcon(memory.type),
-            color: typeColor,
-            size: 24,
-          ),
+          child: Icon(getTypeIcon(memory.type), color: typeColor, size: 24),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -171,9 +168,7 @@ class MemoryCard extends StatelessWidget {
         color: color,
         fontWeight: FontWeight.w600,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -214,7 +209,11 @@ class MemoryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStructuredPreview(ThemeData theme, ColorScheme colorScheme, Color typeColor) {
+  Widget _buildStructuredPreview(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    Color typeColor,
+  ) {
     final data = memory.structuredData;
 
     return Container(
@@ -223,21 +222,14 @@ class MemoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: typeColor.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: typeColor.withValues(alpha: 0.15),
-          width: 1,
-        ),
+        border: Border.all(color: typeColor.withValues(alpha: 0.15), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.auto_awesome,
-                size: 14,
-                color: typeColor,
-              ),
+              Icon(Icons.auto_awesome, size: 14, color: typeColor),
               const SizedBox(width: 8),
               Text(
                 'AI 识别结果',
@@ -249,40 +241,48 @@ class MemoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...data.entries.take(3).map((entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      child: Text(
-                        entry.key,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
+          ...data.entries
+              .take(3)
+              .map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 60,
+                        child: Text(
+                          entry.key,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${entry.value}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface,
+                      Expanded(
+                        child: Text(
+                          '${entry.value}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )),
+              ),
         ],
       ),
     );
   }
 
-  Widget _buildActions(ThemeData theme, ColorScheme colorScheme, Color typeColor) {
+  Widget _buildActions(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    Color typeColor,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -296,10 +296,7 @@ class MemoryCard extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              side: BorderSide(
-                color: colorScheme.outlineVariant,
-                width: 1.5,
-              ),
+              side: BorderSide(color: colorScheme.outlineVariant, width: 1.5),
             ),
           ),
         ),

@@ -159,7 +159,9 @@ class Memory {
     return Memory(
       id: map['id'] as int?,
       type: MemoryType.fromString(map['type'] as String),
-      rawContentType: RawContentType.fromString(map['raw_content_type'] as String),
+      rawContentType: RawContentType.fromString(
+        map['raw_content_type'] as String,
+      ),
       rawContentSummary: map['raw_content_summary'] as String? ?? '',
       structuredData: _parseStructuredData(map['structured_data'] as String?),
       createdAt: DateTime.parse(map['created_at'] as String),

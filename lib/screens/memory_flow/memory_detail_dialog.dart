@@ -24,9 +24,7 @@ class MemoryDetailDialog extends StatelessWidget {
     final typeColor = AppTheme.getMemoryTypeColor(memory.type.value);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(
@@ -62,8 +60,7 @@ class MemoryDetailDialog extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('yyyy-MM-dd HH:mm')
-                            .format(memory.createdAt),
+                        DateFormat('yyyy-MM-dd HH:mm').format(memory.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -174,7 +171,11 @@ class MemoryDetailDialog extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.data_array, size: 16, color: colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.data_array,
+              size: 16,
+              color: colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Text(
               '识别结果',

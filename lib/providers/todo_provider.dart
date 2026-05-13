@@ -17,19 +17,38 @@ class TodoProvider with ChangeNotifier {
   /// 是否显示已完成的待办项
   bool _showCompleted = false;
 
+  /// 最近一次加载错误
+  String? _error;
+
+  /// 加载序号，用于忽略较早返回的异步请求结果
+  int _loadGeneration = 0;
+
   /// 公开的状态访问器
   List<Todo> get todos => _todos;
   bool get showCompleted => _showCompleted;
+  String? get error => _error;
 
   /// 加载待办事项列表
   /// 根据 [showCompleted] 状态决定是否包含已完成项目
   Future<void> loadTodos() async {
-    if (_showCompleted) {
-      _todos = await _dbService.getAllTodos();
-    } else {
-      _todos = await _dbService.getAllTodos(completed: false);
+    final generation = ++_loadGeneration;
+    _error = null;
+
+    try {
+      final todos = _showCompleted
+          ? await _dbService.getAllTodos()
+          : await _dbService.getAllTodos(completed: false);
+      if (generation != _loadGeneration) return;
+
+      _todos = todos;
+    } catch (e) {
+      if (generation != _loadGeneration) return;
+      _error = e.toString();
+    } finally {
+      if (generation == _loadGeneration) {
+        notifyListeners();
+      }
     }
-    notifyListeners();
   }
 
   /// 添加新待办事项
@@ -58,7 +77,7 @@ class TodoProvider with ChangeNotifier {
 
   /// 删除待办事项
   Future<void> deleteTodo(int id) async {
-    await _dbService.deleteTodo(id);
+    await _dbService.deleteTodoWithMemory(id);
     await NotificationService.instance.cancelTodoReminder(id);
     await loadTodos();
   }
@@ -74,15 +93,17 @@ class TodoProvider with ChangeNotifier {
   }
 
   /// 切换是否显示已完成的待办项
-  void toggleShowCompleted() {
+  Future<void> toggleShowCompleted() {
     _showCompleted = !_showCompleted;
-    loadTodos();
+    return loadTodos();
   }
 
   /// 清空所有内存缓存数据
   void clearAll() {
     _todos = [];
     _showCompleted = false;
+    _error = null;
+    _loadGeneration++;
     notifyListeners();
   }
 }

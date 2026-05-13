@@ -44,10 +44,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<ExpenseProvider>();
       provider.loadExpenses();
-      provider.loadMonthlyStats(
-        DateTime.now().year,
-        DateTime.now().month,
-      );
+      provider.loadMonthlyStats(DateTime.now().year, DateTime.now().month);
     });
   }
 
@@ -67,19 +64,26 @@ class _ExpenseScreenState extends State<ExpenseScreen>
       body: SafeArea(
         child: Consumer<ExpenseProvider>(
           builder: (context, provider, child) {
-            return CustomScrollView(
-              slivers: [
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 _buildHeader(theme),
-                SliverToBoxAdapter(
-                  child: _buildMonthSelector(theme, provider),
+                Expanded(
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: _buildMonthSelector(theme, provider),
+                      ),
+                      SliverToBoxAdapter(
+                        child: _buildMonthlySummary(theme, provider),
+                      ),
+                      SliverToBoxAdapter(
+                        child: _buildCategoryLegend(theme, provider),
+                      ),
+                      _buildExpenseList(theme, provider),
+                    ],
+                  ),
                 ),
-                SliverToBoxAdapter(
-                  child: _buildMonthlySummary(theme, provider),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildCategoryLegend(theme, provider),
-                ),
-                _buildExpenseList(theme, provider),
               ],
             );
           },
@@ -93,47 +97,45 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '账本',
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1,
-                      color: colorScheme.onSurface,
-                    ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '账本',
+                  style: theme.textTheme.displayMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                    color: colorScheme.onSurface,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '追踪你的每一笔消费',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '追踪你的每一笔消费',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.billColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.receipt_long_rounded,
-                color: AppTheme.billColor,
-                size: 24,
-              ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.billColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-          ],
-        ),
+            child: Icon(
+              Icons.receipt_long_rounded,
+              color: AppTheme.billColor,
+              size: 24,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -188,7 +190,9 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               duration: const Duration(milliseconds: 200),
               child: Text(
                 '${provider.selectedYear}年${provider.selectedMonth}月',
-                key: ValueKey('${provider.selectedYear}-${provider.selectedMonth}'),
+                key: ValueKey(
+                  '${provider.selectedYear}-${provider.selectedMonth}',
+                ),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: colorScheme.onSurface,
@@ -510,81 +514,78 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final expense = provider.expenses[index];
-            final color = AppTheme.getCategoryColor(expense.category);
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final expense = provider.expenses[index];
+          final color = AppTheme.getCategoryColor(expense.category);
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // 分类图标
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        _getCategoryIcon(expense.category),
-                        color: color,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // 备注/分类名称和日期
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            expense.note ?? expense.category,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateFormat('MM月dd日').format(expense.date),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 金额
-                    Text(
-                      '¥${expense.amount.toStringAsFixed(2)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            );
-          },
-          childCount: provider.expenses.length,
-        ),
+              child: Row(
+                children: [
+                  // 分类图标
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      _getCategoryIcon(expense.category),
+                      color: color,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // 备注/分类名称和日期
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          expense.note ?? expense.category,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('MM月dd日').format(expense.date),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 金额
+                  Text(
+                    '¥${expense.amount.toStringAsFixed(2)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }, childCount: provider.expenses.length),
       ),
     );
   }

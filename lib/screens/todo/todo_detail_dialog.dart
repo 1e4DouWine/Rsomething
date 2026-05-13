@@ -21,9 +21,7 @@ class TodoDetailDialog extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(

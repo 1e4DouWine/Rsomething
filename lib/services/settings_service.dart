@@ -14,6 +14,11 @@ class SettingsService {
   /// 单例实例
   static SettingsService? _instance;
 
+  /// 正在进行中的初始化任务。
+  ///
+  /// 避免多个调用者并发进入时拿到尚未初始化 `_prefs` 的实例。
+  static Future<SettingsService>? _initializing;
+
   /// SharedPreferences 实例
   late SharedPreferences _prefs;
 
@@ -51,14 +56,31 @@ class SettingsService {
   /// 获取设置服务单例实例
   /// 首次调用时会初始化 SharedPreferences，并执行旧数据迁移
   static Future<SettingsService> getInstance() async {
-    if (_instance == null) {
-      _instance = SettingsService._();
-      _instance!._prefs = await SharedPreferences.getInstance();
-      await _instance!._migrateToProfiles();
-      await _instance!._migrateApiKeysToSecureStorage();
-      await _instance!._loadSecureApiKeys();
+    final existing = _instance;
+    if (existing != null) return existing;
+
+    _initializing ??= _initializeInstance();
+    return _initializing!;
+  }
+
+  static Future<SettingsService> _initializeInstance() async {
+    final service = SettingsService._();
+    try {
+      service._prefs = await SharedPreferences.getInstance();
+      await service._migrateToProfiles();
+      await service._migrateApiKeysToSecureStorage();
+      await service._loadSecureApiKeys();
+      _instance = service;
+      return service;
+    } finally {
+      _initializing = null;
     }
-    return _instance!;
+  }
+
+  /// 重置单例状态，仅供测试隔离使用。
+  static void resetForTesting() {
+    _instance = null;
+    _initializing = null;
   }
 
   /// 将旧版单配置迁移到多配置格式

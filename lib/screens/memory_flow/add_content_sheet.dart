@@ -136,10 +136,7 @@ class _AddContentSheetState extends State<AddContentSheet>
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colorScheme.outline,
-                width: 1.5,
-              ),
+              border: Border.all(color: colorScheme.outline, width: 1.5),
             ),
             child: TextField(
               controller: _textController,
@@ -168,7 +165,9 @@ class _AddContentSheetState extends State<AddContentSheet>
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
-                disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.6),
+                disabledBackgroundColor: colorScheme.primary.withValues(
+                  alpha: 0.6,
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -247,8 +246,9 @@ class _AddContentSheetState extends State<AddContentSheet>
         final memory = Memory(
           type: getMemoryTypeFromAction(result.action),
           rawContentType: RawContentType.text,
-          rawContentSummary:
-              text.length > 50 ? '${text.substring(0, 50)}...' : text,
+          rawContentSummary: text.length > 50
+              ? '${text.substring(0, 50)}...'
+              : text,
           structuredData: result.data,
         );
 
@@ -284,8 +284,8 @@ class _AddContentSheetState extends State<AddContentSheet>
         );
       }
     } finally {
-      _buttonAnimationController.reverse();
       if (mounted) {
+        _buttonAnimationController.reverse();
         setState(() => _isAnalyzing = false);
       }
     }

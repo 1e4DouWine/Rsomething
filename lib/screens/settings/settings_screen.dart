@@ -21,13 +21,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             _buildHeader(theme),
-            SliverToBoxAdapter(child: _buildProfileCard(theme)),
-            SliverToBoxAdapter(child: _buildSettingsEntry(theme)),
-            SliverToBoxAdapter(child: _buildAboutSection(theme)),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _buildProfileCard(theme)),
+                  SliverToBoxAdapter(child: _buildSettingsEntry(theme)),
+                  SliverToBoxAdapter(child: _buildAboutSection(theme)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -37,29 +44,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '我的',
-              style: theme.textTheme.displayMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -1,
-              ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '我的',
+            style: theme.textTheme.displayMedium?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1,
             ),
-            const SizedBox(height: 4),
-            Text(
-              '个性化你的 RS',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '个性化你的 RS',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -119,7 +124,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.onPrimary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -164,7 +172,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const GeneralSettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const GeneralSettingsScreen(),
+                ),
               );
             },
             borderRadius: BorderRadius.circular(24),
@@ -175,7 +185,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.12),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.12,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -243,7 +255,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: colorScheme.onSurfaceVariant, size: 20),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     '其他',
@@ -308,19 +324,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
-                    Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -366,11 +399,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: colorScheme.error,
                       ),
                     ),
-                    Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: colorScheme.error.withValues(alpha: 0.5)),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colorScheme.error.withValues(alpha: 0.5),
+              ),
             ],
           ),
         ),
@@ -401,7 +442,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('取消', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+            child: Text(
+              '取消',
+              style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -431,7 +477,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: const Text('所有数据已清空'),
           backgroundColor: colorScheme.primary,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }

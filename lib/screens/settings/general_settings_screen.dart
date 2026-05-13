@@ -134,23 +134,27 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 区块标题
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 区块标题
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                 child: Row(
                   children: [
-                    Icon(Icons.tune_rounded, color: colorScheme.onSurfaceVariant, size: 20),
+                    Icon(
+                      Icons.tune_rounded,
+                      color: colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       '分享设置',
@@ -221,8 +225,18 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
-                Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                Text(
+                  title,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
@@ -264,7 +278,11 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: 16),
               // 标题和副标题
@@ -272,13 +290,26 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
-                    Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
               // 右箭头指示符
-              Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -317,7 +348,9 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
               const SizedBox(height: 24),
               Text(
                 '选择提醒时间',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 24),
               _buildTimeOption(context, '提前 15 分钟', 15),
@@ -351,7 +384,11 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             children: [
-              Icon(Icons.access_time_rounded, color: colorScheme.onSurfaceVariant, size: 20),
+              Icon(
+                Icons.access_time_rounded,
+                color: colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
               const SizedBox(width: 16),
               Text(title, style: theme.textTheme.bodyLarge),
             ],

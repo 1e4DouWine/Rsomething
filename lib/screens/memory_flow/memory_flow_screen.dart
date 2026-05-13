@@ -451,7 +451,10 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           }
           break;
         case MemoryType.event:
-          await memoryProvider.confirmWithRelatedRecord(memory.id!);
+          await memoryProvider.confirmWithRelatedRecord(
+            memory.id!,
+            calendarEvent: _buildCalendarEvent(memory),
+          );
           break;
         default:
           await memoryProvider.confirmWithRelatedRecord(memory.id!);
@@ -545,6 +548,22 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
       title: title == null || title.isEmpty ? '未命名待办' : title,
       dueDate: readDateTime(data['due_date']),
       reminder: readBool(data['reminder']),
+    );
+  }
+
+  /// 从记忆结构化数据中构建日程事件。
+  CalendarEvent _buildCalendarEvent(Memory memory) {
+    final data = memory.structuredData;
+    final title = data['title']?.toString().trim();
+    final startTime = readDateTime(data['start_time']) ?? DateTime.now();
+
+    return CalendarEvent(
+      memoryId: memory.id!,
+      title: title == null || title.isEmpty ? '未命名日程' : title,
+      startTime: startTime,
+      endTime: readDateTime(data['end_time']),
+      location: data['location']?.toString(),
+      notes: data['notes']?.toString(),
     );
   }
 

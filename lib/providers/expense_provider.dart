@@ -25,28 +25,65 @@ class ExpenseProvider with ChangeNotifier {
   /// 当前选中的月份
   int _selectedMonth = DateTime.now().month;
 
+  /// 最近一次加载错误
+  String? _error;
+
+  /// 异步请求序号，用于避免旧请求覆盖新状态
+  int _expensesGeneration = 0;
+  int _statsGeneration = 0;
+
   /// 公开的状态访问器
   List<Expense> get expenses => _expenses;
   double get monthlyTotal => _monthlyTotal;
   Map<String, double> get categoryStats => _categoryStats;
   int get selectedYear => _selectedYear;
   int get selectedMonth => _selectedMonth;
+  String? get error => _error;
 
   /// 加载全部消费记录
   Future<void> loadExpenses() async {
-    _expenses = await _dbService.getAllExpenses();
-    notifyListeners();
+    final generation = ++_expensesGeneration;
+    _error = null;
+
+    try {
+      final expenses = await _dbService.getAllExpenses();
+      if (generation != _expensesGeneration) return;
+
+      _expenses = expenses;
+    } catch (e) {
+      if (generation != _expensesGeneration) return;
+      _error = e.toString();
+    } finally {
+      if (generation == _expensesGeneration) {
+        notifyListeners();
+      }
+    }
   }
 
   /// 加载指定月份的统计数据
   /// [year] 年份，[month] 月份
   /// 更新月度总额和分类统计数据
   Future<void> loadMonthlyStats(int year, int month) async {
+    final generation = ++_statsGeneration;
     _selectedYear = year;
     _selectedMonth = month;
-    _monthlyTotal = await _dbService.getMonthlyExpenseTotal(year, month);
-    _categoryStats = await _dbService.getCategoryExpenses(year, month);
-    notifyListeners();
+    _error = null;
+
+    try {
+      final monthlyTotal = await _dbService.getMonthlyExpenseTotal(year, month);
+      final categoryStats = await _dbService.getCategoryExpenses(year, month);
+      if (generation != _statsGeneration) return;
+
+      _monthlyTotal = monthlyTotal;
+      _categoryStats = categoryStats;
+    } catch (e) {
+      if (generation != _statsGeneration) return;
+      _error = e.toString();
+    } finally {
+      if (generation == _statsGeneration) {
+        notifyListeners();
+      }
+    }
   }
 
   /// 添加消费记录
@@ -59,8 +96,8 @@ class ExpenseProvider with ChangeNotifier {
 
   /// 切换查看的月份
   /// [year] 年份，[month] 月份
-  void changeMonth(int year, int month) {
-    loadMonthlyStats(year, month);
+  Future<void> changeMonth(int year, int month) {
+    return loadMonthlyStats(year, month);
   }
 
   /// 清空所有内存缓存数据
@@ -70,6 +107,9 @@ class ExpenseProvider with ChangeNotifier {
     _categoryStats = {};
     _selectedYear = DateTime.now().year;
     _selectedMonth = DateTime.now().month;
+    _error = null;
+    _expensesGeneration++;
+    _statsGeneration++;
     notifyListeners();
   }
 }

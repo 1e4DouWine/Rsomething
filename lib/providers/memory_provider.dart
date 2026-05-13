@@ -19,38 +19,67 @@ class MemoryProvider with ChangeNotifier {
   /// 是否正在加载数据
   bool _isLoading = false;
 
+  /// 最近一次加载/搜索的错误信息
+  String? _error;
+
+  /// 加载序号，用于忽略较早返回的异步请求结果
+  int _loadGeneration = 0;
+
   /// 公开的状态访问器
   List<Memory> get memories => _memories;
   MemoryType? get filterType => _filterType;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   /// 加载记忆列表
   /// [type] 可选的类型筛选条件，为 null 时加载全部
   Future<void> loadMemories({MemoryType? type}) async {
+    final generation = ++_loadGeneration;
     _isLoading = true;
-    notifyListeners();
-
+    _error = null;
     _filterType = type;
-    _memories = await _dbService.getAllMemories(type: type);
-
-    _isLoading = false;
     notifyListeners();
+
+    try {
+      final memories = await _dbService.getAllMemories(type: type);
+      if (generation != _loadGeneration) return;
+
+      _memories = memories;
+    } catch (e) {
+      if (generation != _loadGeneration) return;
+      _error = e.toString();
+    } finally {
+      if (generation == _loadGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
   }
 
   /// 搜索记忆
   /// [query] 搜索关键词，为空时恢复显示全部（或按当前筛选条件）
   Future<void> searchMemories(String query) async {
+    final generation = ++_loadGeneration;
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
-    if (query.isEmpty) {
-      _memories = await _dbService.getAllMemories(type: _filterType);
-    } else {
-      _memories = await _dbService.searchMemories(query);
+    try {
+      final memories = query.isEmpty
+          ? await _dbService.getAllMemories(type: _filterType)
+          : await _dbService.searchMemories(query);
+      if (generation != _loadGeneration) return;
+
+      _memories = memories;
+    } catch (e) {
+      if (generation != _loadGeneration) return;
+      _error = e.toString();
+    } finally {
+      if (generation == _loadGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   /// 添加新记忆
@@ -101,6 +130,8 @@ class MemoryProvider with ChangeNotifier {
     _memories = [];
     _filterType = null;
     _isLoading = false;
+    _error = null;
+    _loadGeneration++;
     notifyListeners();
   }
 }

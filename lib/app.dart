@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_handler/share_handler.dart';
@@ -35,6 +37,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  StreamSubscription<SharedMedia>? _shareSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -45,25 +49,32 @@ class _MyAppState extends State<MyApp> {
   /// 监听运行时的分享事件（非冷启动），收到分享内容后导航到处理页面
   void _setupShareListener() {
     ShareHandlerPlatform.instance.resetInitialSharedMedia();
-    ShareHandlerPlatform.instance.sharedMediaStream.listen((media) {
-      if (!mounted) return;
-      final text = media.content;
-      final images = media.attachments
-              ?.where((a) => a?.path != null)
-              .map((a) => a!.path)
-              .toList() ??
-          [];
-      if (text != null || images.isNotEmpty) {
-        _navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (_) => ShareReceiverScreen(
-              sharedText: text,
-              sharedImages: images,
+    _shareSubscription = ShareHandlerPlatform.instance.sharedMediaStream.listen(
+      (media) {
+        if (!mounted) return;
+        final text = media.content;
+        final images =
+            media.attachments
+                ?.where((a) => a?.path != null)
+                .map((a) => a!.path)
+                .toList() ??
+            [];
+        if (text != null || images.isNotEmpty) {
+          _navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  ShareReceiverScreen(sharedText: text, sharedImages: images),
             ),
-          ),
-        );
-      }
-    });
+          );
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _shareSubscription?.cancel();
+    super.dispose();
   }
 
   /// 全局 Navigator Key，用于在监听器中进行页面导航
@@ -76,7 +87,9 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => MemoryProvider()),
         ChangeNotifierProvider(create: (_) => ExpenseProvider()),
         ChangeNotifierProvider(create: (_) => TodoProvider()),
-        ChangeNotifierProvider(create: (_) => AIProvider(widget.settingsService)),
+        ChangeNotifierProvider(
+          create: (_) => AIProvider(widget.settingsService),
+        ),
       ],
       child: MaterialApp(
         navigatorKey: _navigatorKey,
@@ -89,7 +102,8 @@ class _MyAppState extends State<MyApp> {
         home: widget.initialSharedMedia != null
             ? ShareReceiverScreen(
                 sharedText: widget.initialSharedMedia!.content,
-                sharedImages: widget.initialSharedMedia!.attachments
+                sharedImages:
+                    widget.initialSharedMedia!.attachments
                         ?.where((a) => a?.path != null)
                         .map((a) => a!.path)
                         .toList() ??
@@ -128,10 +142,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // 使用 IndexedStack 保持所有页面状态，避免切换时重建
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       // Material 3 底部导航栏
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,

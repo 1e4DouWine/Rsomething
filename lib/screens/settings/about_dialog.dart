@@ -17,9 +17,7 @@ class RSAboutDialog extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(
@@ -104,9 +102,6 @@ class RSAboutDialog extends StatelessWidget {
 
   /// 静态方法：显示关于对话框
   static void show(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const RSAboutDialog(),
-    );
+    showDialog(context: context, builder: (context) => const RSAboutDialog());
   }
 }

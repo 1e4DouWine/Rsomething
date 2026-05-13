@@ -1,8 +1,6 @@
-import 'package:share_handler/share_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
 import 'dart:convert';
 import '../models/models.dart';
 import '../providers/providers.dart';
@@ -55,35 +53,11 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     super.initState();
     _sharedText = widget.sharedText;
     _sharedImages = widget.sharedImages ?? [];
-    _initShareHandler();
 
     // 如果已有分享内容，自动开始处理
     if (_sharedText != null || _sharedImages.isNotEmpty) {
       _startProcessing();
     }
-  }
-
-  /// 初始化分享处理器
-  /// 检查是否有通过冷启动传入的初始分享内容
-  void _initShareHandler() {
-    final handler = ShareHandlerPlatform.instance;
-    handler.getInitialSharedMedia().then((media) {
-      if (media != null && mounted) {
-        if (media.content != null) {
-          _sharedText = media.content;
-        }
-        if (media.attachments != null) {
-          for (var attachment in media.attachments!) {
-            if (attachment?.path != null) {
-              _sharedImages.add(attachment!.path);
-            }
-          }
-        }
-        if (_sharedText != null || _sharedImages.isNotEmpty) {
-          _startProcessing();
-        }
-      }
-    });
   }
 
   /// 开始 AI 分析处理流程
@@ -128,24 +102,28 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
 
         if (!mounted) return;
         final memoryId = await context.read<MemoryProvider>().addMemory(memory);
+        await _maybeNotifyProcessingComplete(memoryId, memory.type);
 
+        if (!mounted) return;
         setState(() {
           _result = result;
           _memory = memory.copyWith(id: memoryId);
           _status = '分析完成';
           _isProcessing = false;
         });
-      } else {
+      } else if (mounted) {
         setState(() {
           _status = '分析失败: ${aiProvider.error ?? "未知错误"}';
           _isProcessing = false;
         });
       }
     } catch (e) {
-      setState(() {
-        _status = '处理出错: $e';
-        _isProcessing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _status = '处理出错: $e';
+          _isProcessing = false;
+        });
+      }
     }
   }
 
@@ -163,6 +141,24 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     }
 
     return base64Encode(compressed);
+  }
+
+  Future<void> _maybeNotifyProcessingComplete(
+    int memoryId,
+    MemoryType memoryType,
+  ) async {
+    final settings = await SettingsService.getInstance();
+    if (!settings.isSilentMode()) return;
+
+    try {
+      await NotificationService.instance.showProcessingComplete(
+        id: 200000 + memoryId,
+        title: '内容分析完成',
+        body: '已识别为${memoryType.label}，请打开应用确认保存。',
+      );
+    } catch (_) {
+      // 通知失败不应影响已经保存到记忆流的内容。
+    }
   }
 
   @override
@@ -432,7 +428,10 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           }
           break;
         case MemoryType.event:
-          await memoryProvider.confirmWithRelatedRecord(memory.id!);
+          await memoryProvider.confirmWithRelatedRecord(
+            memory.id!,
+            calendarEvent: _buildCalendarEvent(memory.id!, _result!.data),
+          );
           break;
         default:
           await memoryProvider.confirmWithRelatedRecord(memory.id!);
@@ -493,6 +492,21 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       title: title == null || title.isEmpty ? '未命名待办' : title,
       dueDate: readDateTime(data['due_date']),
       reminder: readBool(data['reminder']),
+    );
+  }
+
+  /// 从结构化数据构建日程事件。
+  CalendarEvent _buildCalendarEvent(int memoryId, Map<String, dynamic> data) {
+    final title = data['title']?.toString().trim();
+    final startTime = readDateTime(data['start_time']) ?? DateTime.now();
+
+    return CalendarEvent(
+      memoryId: memoryId,
+      title: title == null || title.isEmpty ? '未命名日程' : title,
+      startTime: startTime,
+      endTime: readDateTime(data['end_time']),
+      location: data['location']?.toString(),
+      notes: data['notes']?.toString(),
     );
   }
 
