@@ -63,6 +63,16 @@ class TodoProvider with ChangeNotifier {
     await loadTodos();
   }
 
+  /// 取消指定记忆关联待办的提醒。
+  ///
+  /// 删除记忆会通过外键级联删除待办记录，因此需要在删除记忆前调用。
+  Future<void> cancelReminderForMemory(int memoryId) async {
+    final todo = await _dbService.getTodoByMemoryId(memoryId);
+    if (todo?.id == null) return;
+
+    await NotificationService.instance.cancelTodoReminder(todo!.id!);
+  }
+
   /// 切换是否显示已完成的待办项
   void toggleShowCompleted() {
     _showCompleted = !_showCompleted;

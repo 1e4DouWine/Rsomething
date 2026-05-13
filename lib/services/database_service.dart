@@ -338,6 +338,20 @@ class DatabaseService {
     return maps.map((map) => Todo.fromMap(map)).toList();
   }
 
+  /// 根据关联记忆 ID 获取待办事项。
+  Future<Todo?> getTodoByMemoryId(int memoryId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'todos',
+      where: 'memory_id = ?',
+      whereArgs: [memoryId],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) return null;
+    return Todo.fromMap(maps.first);
+  }
+
   /// 更新待办事项的完成状态
   Future<void> updateTodoCompletion(int id, bool isCompleted) async {
     final db = await database;

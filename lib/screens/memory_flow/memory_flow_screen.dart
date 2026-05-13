@@ -498,7 +498,28 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
 
   /// 删除记忆
   Future<void> _deleteMemory(Memory memory) async {
-    await context.read<MemoryProvider>().deleteMemory(memory.id!);
+    final memoryProvider = context.read<MemoryProvider>();
+    final expenseProvider = context.read<ExpenseProvider>();
+    final todoProvider = context.read<TodoProvider>();
+
+    switch (memory.type) {
+      case MemoryType.bill:
+        await memoryProvider.deleteMemory(memory.id!);
+        await expenseProvider.loadExpenses();
+        await expenseProvider.loadMonthlyStats(
+          expenseProvider.selectedYear,
+          expenseProvider.selectedMonth,
+        );
+        break;
+      case MemoryType.todo:
+        await todoProvider.cancelReminderForMemory(memory.id!);
+        await memoryProvider.deleteMemory(memory.id!);
+        await todoProvider.loadTodos();
+        break;
+      default:
+        await memoryProvider.deleteMemory(memory.id!);
+        break;
+    }
   }
 
   /// 从记忆结构化数据中构建消费记录。
