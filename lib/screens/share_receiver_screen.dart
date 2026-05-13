@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../utils/type_helpers.dart';
 import '../services/ai_service.dart';
+import '../services/android_share_status_service.dart';
 import '../services/notification_service.dart';
 import '../services/settings_service.dart';
 
@@ -23,7 +25,17 @@ class ShareReceiverScreen extends StatefulWidget {
   /// 分享的图片路径列表（可选）
   final List<String>? sharedImages;
 
-  const ShareReceiverScreen({super.key, this.sharedText, this.sharedImages});
+  /// 系统分享分析完成后是否自动关闭分享承载页。
+  ///
+  /// 默认停留在结果页，等待用户确认保存或忽略。
+  final bool autoCloseOnProcessed;
+
+  const ShareReceiverScreen({
+    super.key,
+    this.sharedText,
+    this.sharedImages,
+    this.autoCloseOnProcessed = false,
+  });
 
   @override
   State<ShareReceiverScreen> createState() => _ShareReceiverScreenState();
@@ -47,6 +59,11 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
 
   /// 从分析结果创建的记忆对象
   Memory? _memory;
+
+  final int _shareStatusNotificationId =
+      220001 + DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
+  bool _shareStatusStarted = false;
 
   @override
   void initState() {
@@ -75,6 +92,10 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     });
 
     try {
+      _shareStatusStarted = await AndroidShareStatusService.instance
+          .showAnalyzing(id: _shareStatusNotificationId);
+      if (!mounted) return;
+
       final aiProvider = context.read<AIProvider>();
       AnalysisResult? result;
 
@@ -102,7 +123,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
 
         if (!mounted) return;
         final memoryId = await context.read<MemoryProvider>().addMemory(memory);
-        await _maybeNotifyProcessingComplete(memoryId, memory.type);
+        await _notifyProcessingComplete(memoryId, memory.type);
 
         if (!mounted) return;
         setState(() {
@@ -111,13 +132,17 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           _status = '分析完成';
           _isProcessing = false;
         });
+        await _closeAfterProcessed();
       } else if (mounted) {
+        await _notifyProcessingFailed(aiProvider.error ?? '未知错误');
+        if (!mounted) return;
         setState(() {
           _status = '分析失败: ${aiProvider.error ?? "未知错误"}';
           _isProcessing = false;
         });
       }
     } catch (e) {
+      await _notifyProcessingFailed(e.toString());
       if (mounted) {
         setState(() {
           _status = '处理出错: $e';
@@ -161,6 +186,49 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     }
   }
 
+  Future<void> _notifyProcessingComplete(
+    int memoryId,
+    MemoryType memoryType,
+  ) async {
+    if (_shareStatusStarted) {
+      await AndroidShareStatusService.instance.showComplete(
+        id: _shareStatusNotificationId,
+        memoryTypeLabel: memoryType.label,
+      );
+      return;
+    }
+
+    await _maybeNotifyProcessingComplete(memoryId, memoryType);
+  }
+
+  Future<void> _notifyProcessingFailed(String message) async {
+    if (!_shareStatusStarted) return;
+
+    await AndroidShareStatusService.instance.showFailed(
+      id: _shareStatusNotificationId,
+      message: message,
+    );
+  }
+
+  Future<void> _closeAfterProcessed() async {
+    if (!widget.autoCloseOnProcessed) return;
+
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await _closeShareSurface();
+  }
+
+  Future<void> _closeShareSurface() async {
+    if (!mounted) return;
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+
+    await SystemNavigator.pop(animated: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,7 +236,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         title: const Text('RS 内容处理'),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _closeShareSurface,
         ),
       ),
       body: Padding(
@@ -442,7 +510,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('已保存到记忆流')));
-        Navigator.of(context).pop();
+        await _closeShareSurface();
       }
     } catch (e) {
       if (mounted) {
@@ -468,7 +536,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
     );
 
     if (mounted) {
-      Navigator.of(context).pop();
+      await _closeShareSurface();
     }
   }
 

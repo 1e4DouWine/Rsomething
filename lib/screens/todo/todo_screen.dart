@@ -23,7 +23,7 @@ class TodoScreen extends StatefulWidget {
 }
 
 class _TodoScreenState extends State<TodoScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   /// FAB 弹出动画控制器
   late AnimationController _fabAnimationController;
 
@@ -33,6 +33,8 @@ class _TodoScreenState extends State<TodoScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     // 初始化 FAB 弹出动画
     _fabAnimationController = AnimationController(
       vsync: this,
@@ -46,14 +48,26 @@ class _TodoScreenState extends State<TodoScreen>
 
     // 页面加载后自动获取待办列表
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TodoProvider>().loadTodos();
+      _reloadTodos();
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fabAnimationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _reloadTodos();
+    }
+  }
+
+  Future<void> _reloadTodos() {
+    return context.read<TodoProvider>().loadTodos();
   }
 
   @override

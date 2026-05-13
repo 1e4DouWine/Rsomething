@@ -27,7 +27,7 @@ class MemoryFlowScreen extends StatefulWidget {
 }
 
 class _MemoryFlowScreenState extends State<MemoryFlowScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   /// 当前选中的筛选类型（null 表示全部）
   MemoryType? _selectedType;
 
@@ -43,6 +43,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     // 初始化 FAB 弹出动画
     _fabAnimationController = AnimationController(
       vsync: this,
@@ -56,15 +58,32 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
 
     // 页面加载后自动获取记忆列表
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MemoryProvider>().loadMemories();
+      _reloadMemories();
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     _fabAnimationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _reloadMemories();
+    }
+  }
+
+  Future<void> _reloadMemories() {
+    final query = _searchController.text.trim();
+    final memoryProvider = context.read<MemoryProvider>();
+    if (query.isEmpty) {
+      return memoryProvider.loadMemories(type: _selectedType);
+    }
+    return memoryProvider.searchMemories(query);
   }
 
   @override

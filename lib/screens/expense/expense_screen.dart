@@ -19,7 +19,7 @@ class ExpenseScreen extends StatefulWidget {
 }
 
 class _ExpenseScreenState extends State<ExpenseScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   /// 头部入场动画控制器
   late AnimationController _animationController;
 
@@ -29,6 +29,8 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     // 初始化头部入场动画
     _animationController = AnimationController(
       vsync: this,
@@ -42,16 +44,31 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
     // 页面加载后自动获取消费数据和当月统计
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<ExpenseProvider>();
-      provider.loadExpenses();
-      provider.loadMonthlyStats(DateTime.now().year, DateTime.now().month);
+      _reloadExpenses();
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _reloadExpenses();
+    }
+  }
+
+  Future<void> _reloadExpenses() async {
+    final provider = context.read<ExpenseProvider>();
+    await provider.loadExpenses();
+    await provider.loadMonthlyStats(
+      provider.selectedYear,
+      provider.selectedMonth,
+    );
   }
 
   @override
@@ -468,10 +485,12 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
     if (provider.expenses.isEmpty) {
       return SliverFillRemaining(
+        hasScrollBody: false,
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(48),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
