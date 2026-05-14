@@ -197,6 +197,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
               children: [
                 // 上个月按钮
                 IconButton(
+                  tooltip: '上个月',
                   onPressed: () {
                     int year = provider.selectedYear;
                     int month = provider.selectedMonth - 1;
@@ -238,6 +239,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
                 ),
                 // 下个月按钮
                 IconButton(
+                  tooltip: '下个月',
                   onPressed: () {
                     int year = provider.selectedYear;
                     int month = provider.selectedMonth + 1;

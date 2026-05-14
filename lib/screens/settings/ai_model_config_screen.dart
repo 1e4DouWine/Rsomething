@@ -548,6 +548,7 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
           // 编辑模式下显示删除按钮
           if (_isEditing)
             IconButton(
+              tooltip: '删除配置',
               icon: Icon(
                 Icons.delete_outline_rounded,
                 color: colorScheme.error,

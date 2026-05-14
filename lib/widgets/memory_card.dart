@@ -38,43 +38,46 @@ class MemoryCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                width: 6,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [typeColor, typeColor.withValues(alpha: 0.6)],
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [typeColor, typeColor.withValues(alpha: 0.6)],
+                    ),
                   ),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(theme, colorScheme, typeColor),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(theme, colorScheme, typeColor),
+                    const SizedBox(height: 16),
+                    _buildContent(theme, colorScheme),
+                    if (memory.structuredData.isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      _buildContent(theme, colorScheme),
-                      if (memory.structuredData.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        _buildStructuredPreview(theme, colorScheme, typeColor),
-                      ],
-                      if (memory.status == MemoryStatus.pending) ...[
-                        const SizedBox(height: 20),
-                        _buildActions(theme, colorScheme, typeColor),
-                      ],
+                      _buildStructuredPreview(theme, colorScheme, typeColor),
                     ],
-                  ),
+                    if (memory.status == MemoryStatus.pending) ...[
+                      const SizedBox(height: 20),
+                      _buildActions(theme, colorScheme, typeColor),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -119,6 +122,7 @@ class MemoryCard extends StatelessWidget {
         _buildStatusChip(theme, colorScheme),
         if (onDelete != null)
           IconButton(
+            tooltip: '删除记忆',
             onPressed: onDelete,
             icon: Icon(
               Icons.delete_outline_rounded,

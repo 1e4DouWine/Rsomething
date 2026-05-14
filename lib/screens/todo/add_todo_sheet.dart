@@ -137,6 +137,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
                   ),
                   trailing: selectedDate != null
                       ? IconButton(
+                          tooltip: '清除提醒时间',
                           icon: Icon(
                             Icons.clear_rounded,
                             color: colorScheme.onSurfaceVariant,

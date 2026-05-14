@@ -428,9 +428,7 @@ class _TodoScreenState extends State<TodoScreen>
               width: iconExtent,
               height: iconExtent,
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(
-                  alpha: 0.1,
-                ),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -565,38 +563,26 @@ class _TodoScreenState extends State<TodoScreen>
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  // 自定义复选框（点击切换完成状态）
-                  GestureDetector(
-                    onTap: () {
-                      final todoId = todo.id;
-                      if (todoId == null) return;
-                      provider.toggleCompletion(todoId, !todo.isCompleted);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: todo.isCompleted
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: todo.isCompleted
-                              ? colorScheme.primary
-                              : isOverdue
-                              ? colorScheme.error
-                              : colorScheme.outline,
-                          width: 2,
-                        ),
+                  Semantics(
+                    label: todo.isCompleted ? '标记为未完成' : '标记为已完成',
+                    checked: todo.isCompleted,
+                    child: Checkbox(
+                      value: todo.isCompleted,
+                      onChanged: (value) {
+                        final todoId = todo.id;
+                        if (todoId == null || value == null) return;
+                        provider.toggleCompletion(todoId, value);
+                      },
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: todo.isCompleted
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 18,
-                              color: colorScheme.onPrimary,
-                            )
-                          : null,
+                      side: BorderSide(
+                        color: isOverdue && !todo.isCompleted
+                            ? colorScheme.error
+                            : colorScheme.outline,
+                        width: 2,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),

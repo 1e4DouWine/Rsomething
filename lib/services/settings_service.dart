@@ -90,28 +90,49 @@ class SettingsService {
     if (profilesJson != null && profilesJson.isNotEmpty) return;
 
     // 读取旧版单配置，创建为"默认配置"档案
-    final existingApiKey = getApiKey();
+    final legacyApiKey = _prefs.getString(_keyApiKey) ?? '';
     final profile = AiConfigProfile(
       id: 'default',
       name: '默认配置',
       baseUrl: getBaseUrl(),
-      apiKey: existingApiKey,
+      apiKey: '',
       modelName: getModelName(),
     );
     await _prefs.setString(_keyAiProfiles, json.encode([profile.toMap()]));
     await _prefs.setString(_keyActiveProfileId, 'default');
+    if (legacyApiKey.isNotEmpty) {
+      await _writeSecureApiKey(profile.id, legacyApiKey);
+      await _prefs.remove(_keyApiKey);
+    }
   }
 
   /// 将旧版明文 API Key 迁移到系统安全存储，并从 SharedPreferences 中移除。
   Future<void> _migrateApiKeysToSecureStorage() async {
     final legacyApiKey = _prefs.getString(_keyApiKey) ?? '';
     final profiles = _readProfilesFromPrefs();
-    if (profiles.isEmpty) return;
+    if (profiles.isEmpty) {
+      if (legacyApiKey.isNotEmpty) {
+        final profile = AiConfigProfile(
+          id: 'default',
+          name: '默认配置',
+          baseUrl: getBaseUrl(),
+          apiKey: legacyApiKey,
+          modelName: getModelName(),
+        );
+        await saveProfiles([profile]);
+        await setActiveProfileId(profile.id);
+        await _prefs.remove(_keyApiKey);
+      }
+      return;
+    }
 
     final hasPlainTextProfileKey = profiles.any(
       (profile) => profile.apiKey.isNotEmpty,
     );
-    if (legacyApiKey.isEmpty && !hasPlainTextProfileKey) return;
+    if (legacyApiKey.isEmpty && !hasPlainTextProfileKey) {
+      await _prefs.remove(_keyApiKey);
+      return;
+    }
 
     final migratedProfiles = <AiConfigProfile>[];
     for (final profile in profiles) {
@@ -305,7 +326,7 @@ class SettingsService {
   String getApiKey() {
     final active = getActiveProfile();
     if (active != null) return active.apiKey;
-    return _prefs.getString(_keyApiKey) ?? _defaultApiKey;
+    return _defaultApiKey;
   }
 
   /// 设置 API Key
@@ -316,7 +337,16 @@ class SettingsService {
       return;
     }
 
-    await _prefs.setString(_keyApiKey, key);
+    final profile = AiConfigProfile(
+      id: 'default',
+      name: '默认配置',
+      baseUrl: getBaseUrl(),
+      apiKey: key,
+      modelName: getModelName(),
+    );
+    await saveProfiles([profile]);
+    await setActiveProfileId(profile.id);
+    await _prefs.remove(_keyApiKey);
   }
 
   /// 获取模型名称

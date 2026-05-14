@@ -8,6 +8,7 @@ import '../providers/providers.dart';
 import '../utils/type_helpers.dart';
 import '../services/ai_service.dart';
 import '../services/android_share_status_service.dart';
+import '../services/memory_action_service.dart';
 import '../services/notification_service.dart';
 import '../services/settings_service.dart';
 import '../widgets/adaptive_layout.dart';
@@ -238,6 +239,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       appBar: AppBar(
         title: const Text('RS 内容处理'),
         leading: IconButton(
+          tooltip: '关闭',
           icon: const Icon(Icons.close),
           onPressed: _closeShareSurface,
         ),
@@ -489,50 +491,16 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 更新记忆状态为已确认，并根据类型保存到对应模块（账单/待办/日程）
   Future<void> _confirmMemory() async {
     final memory = _memory;
-    final result = _result;
-    if (memory == null || result == null) return;
-    final memoryId = memory.id;
-    if (memoryId == null) return;
+    if (memory == null) return;
 
-    final memoryProvider = context.read<MemoryProvider>();
-    final expenseProvider = context.read<ExpenseProvider>();
-    final todoProvider = context.read<TodoProvider>();
+    final actions = MemoryActionService(
+      memoryProvider: context.read<MemoryProvider>(),
+      expenseProvider: context.read<ExpenseProvider>(),
+      todoProvider: context.read<TodoProvider>(),
+    );
 
     try {
-      // 根据记忆类型保存到对应模块。状态更新和业务记录写入在同一事务中完成。
-      switch (memory.type) {
-        case MemoryType.bill:
-          await memoryProvider.confirmWithRelatedRecord(
-            memoryId,
-            expense: _buildExpense(memoryId, result.data),
-          );
-          await expenseProvider.loadExpenses();
-          await expenseProvider.loadMonthlyStats(
-            expenseProvider.selectedYear,
-            expenseProvider.selectedMonth,
-          );
-          break;
-        case MemoryType.todo:
-          final todo = _buildTodo(memoryId, result.data);
-          final todoId = await memoryProvider.confirmWithRelatedRecord(
-            memoryId,
-            todo: todo,
-          );
-          await todoProvider.loadTodos();
-          if (todoId != null) {
-            await _scheduleTodoReminder(todo.copyWith(id: todoId));
-          }
-          break;
-        case MemoryType.event:
-          await memoryProvider.confirmWithRelatedRecord(
-            memoryId,
-            calendarEvent: _buildCalendarEvent(memoryId, result.data),
-          );
-          break;
-        default:
-          await memoryProvider.confirmWithRelatedRecord(memoryId);
-          break;
-      }
+      await actions.confirm(memory);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -558,74 +526,15 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   Future<void> _dismissMemory() async {
     final memory = _memory;
     if (memory == null) return;
-    final memoryId = memory.id;
-    if (memoryId == null) return;
 
-    await context.read<MemoryProvider>().updateStatus(
-      memoryId,
-      MemoryStatus.dismissed,
-    );
+    await MemoryActionService(
+      memoryProvider: context.read<MemoryProvider>(),
+      expenseProvider: context.read<ExpenseProvider>(),
+      todoProvider: context.read<TodoProvider>(),
+    ).dismiss(memory);
 
     if (mounted) {
       await _closeShareSurface();
-    }
-  }
-
-  /// 从结构化数据构建消费记录。
-  Expense _buildExpense(int memoryId, Map<String, dynamic> data) {
-    return Expense(
-      memoryId: memoryId,
-      amount: readAmount(data['amount']),
-      currency: data['currency']?.toString() ?? 'CNY',
-      category: data['category']?.toString() ?? '其他',
-      date: readDateTime(data['date']) ?? DateTime.now(),
-      note: data['note']?.toString(),
-    );
-  }
-
-  /// 从结构化数据构建待办事项。
-  Todo _buildTodo(int memoryId, Map<String, dynamic> data) {
-    final title = data['title']?.toString().trim();
-    return Todo(
-      memoryId: memoryId,
-      title: title == null || title.isEmpty ? '未命名待办' : title,
-      dueDate: readDateTime(data['due_date']),
-      reminder: readBool(data['reminder']),
-    );
-  }
-
-  /// 从结构化数据构建日程事件。
-  CalendarEvent _buildCalendarEvent(int memoryId, Map<String, dynamic> data) {
-    final title = data['title']?.toString().trim();
-    final startTime = readDateTime(data['start_time']) ?? DateTime.now();
-
-    return CalendarEvent(
-      memoryId: memoryId,
-      title: title == null || title.isEmpty ? '未命名日程' : title,
-      startTime: startTime,
-      endTime: readDateTime(data['end_time']),
-      location: data['location']?.toString(),
-      notes: data['notes']?.toString(),
-    );
-  }
-
-  Future<void> _scheduleTodoReminder(Todo todo) async {
-    final todoId = todo.id;
-    final dueDate = todo.dueDate;
-    if (!todo.reminder || dueDate == null || todoId == null) return;
-
-    final settings = await SettingsService.getInstance();
-    final reminderAt = dueDate.subtract(
-      Duration(minutes: settings.getDefaultReminderMinutes()),
-    );
-    try {
-      await NotificationService.instance.scheduleTodoReminder(
-        todoId: todoId,
-        title: todo.title,
-        scheduledAt: reminderAt,
-      );
-    } catch (_) {
-      // 提醒调度失败不应回滚已经保存的记忆内容。
     }
   }
 }

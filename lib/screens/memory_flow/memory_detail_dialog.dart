@@ -69,6 +69,7 @@ class MemoryDetailDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: '关闭',
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(
                     Icons.close_rounded,

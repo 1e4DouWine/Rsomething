@@ -10,7 +10,10 @@ import '../services/database_service.dart';
 /// 使用 ChangeNotifier 模式，配合 Provider 实现响应式 UI 更新。
 class MemoryProvider with ChangeNotifier {
   /// 数据库服务实例
-  final DatabaseService _dbService = DatabaseService();
+  final DatabaseService _dbService;
+
+  MemoryProvider({DatabaseService? databaseService})
+    : _dbService = databaseService ?? DatabaseService();
 
   /// 当前记忆列表（内部可变，外部通过只读视图访问）
   List<Memory> _memories = [];

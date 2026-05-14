@@ -11,7 +11,16 @@ import '../services/notification_service.dart';
 /// 支持显示/隐藏已完成项目的切换。
 class TodoProvider with ChangeNotifier {
   /// 数据库服务实例
-  final DatabaseService _dbService = DatabaseService();
+  final DatabaseService _dbService;
+
+  final NotificationService _notificationService;
+
+  TodoProvider({
+    DatabaseService? databaseService,
+    NotificationService? notificationService,
+  }) : _dbService = databaseService ?? DatabaseService(),
+       _notificationService =
+           notificationService ?? NotificationService.instance;
 
   /// 当前待办事项列表（内部可变，外部只读）
   List<Todo> _todos = [];
@@ -81,7 +90,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> toggleCompletion(int id, bool isCompleted) async {
     await _dbService.updateTodoCompletion(id, isCompleted);
     if (isCompleted) {
-      await NotificationService.instance.cancelTodoReminder(id);
+      await _notificationService.cancelTodoReminder(id);
     }
     await loadTodos();
   }
@@ -89,7 +98,7 @@ class TodoProvider with ChangeNotifier {
   /// 删除待办事项
   Future<void> deleteTodo(int id) async {
     await _dbService.deleteTodoWithMemory(id);
-    await NotificationService.instance.cancelTodoReminder(id);
+    await _notificationService.cancelTodoReminder(id);
     await loadTodos();
   }
 
@@ -101,7 +110,7 @@ class TodoProvider with ChangeNotifier {
     final todoId = todo?.id;
     if (todoId == null) return;
 
-    await NotificationService.instance.cancelTodoReminder(todoId);
+    await _notificationService.cancelTodoReminder(todoId);
   }
 
   /// 切换是否显示已完成的待办项

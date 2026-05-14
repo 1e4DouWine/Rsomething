@@ -96,6 +96,48 @@ void main() {
     expect(service.getProfiles().single.apiKey, 'secret-key');
   });
 
+  test('legacy api key migration never leaves plaintext prefs', () async {
+    SharedPreferences.setMockInitialValues({
+      'ai_api_key': 'legacy-secret',
+      'ai_base_url': 'https://api.example.com/v1/chat/completions',
+      'ai_model_name': 'example-model',
+    });
+    SettingsService.resetForTesting();
+
+    final service = await SettingsService.getInstance();
+    final prefs = await SharedPreferences.getInstance();
+    final profilesJson = prefs.getString('ai_config_profiles');
+
+    expect(service.getApiKey(), 'legacy-secret');
+    expect(secureValues['ai_profile_api_key_default'], 'legacy-secret');
+    expect(prefs.getString('ai_api_key'), isNull);
+    expect(profilesJson, isNotNull);
+    expect(profilesJson, isNot(contains('legacy-secret')));
+  });
+
+  test(
+    'setApiKey recreates a secure default profile if profile storage is bad',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'ai_config_profiles': '{bad json',
+        'ai_active_profile_id': 'missing',
+      });
+      SettingsService.resetForTesting();
+
+      final service = await SettingsService.getInstance();
+      await service.setApiKey('new-secret');
+
+      final prefs = await SharedPreferences.getInstance();
+      final profilesJson = prefs.getString('ai_config_profiles');
+
+      expect(service.getApiKey(), 'new-secret');
+      expect(secureValues['ai_profile_api_key_default'], 'new-secret');
+      expect(profilesJson, isNotNull);
+      expect(profilesJson, isNot(contains('new-secret')));
+      expect(prefs.getString('ai_api_key'), isNull);
+    },
+  );
+
   test('malformed profile storage does not break initialization', () async {
     SharedPreferences.setMockInitialValues({
       'ai_config_profiles': '{bad json',

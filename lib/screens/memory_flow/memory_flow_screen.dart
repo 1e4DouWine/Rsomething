@@ -5,9 +5,7 @@ import '../../providers/providers.dart';
 import '../../widgets/memory_card.dart';
 import '../../widgets/adaptive_layout.dart';
 import '../../theme/app_theme.dart';
-import '../../services/notification_service.dart';
-import '../../services/settings_service.dart';
-import '../../utils/type_helpers.dart';
+import '../../services/memory_action_service.dart';
 import 'add_content_sheet.dart';
 import 'memory_detail_dialog.dart';
 
@@ -176,6 +174,7 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
                   ],
                 ),
                 child: IconButton(
+                  tooltip: '搜索记忆',
                   icon: Icon(
                     Icons.search_rounded,
                     color: colorScheme.onSurfaceVariant,
@@ -491,50 +490,19 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  MemoryActionService _memoryActions() {
+    return MemoryActionService(
+      memoryProvider: context.read<MemoryProvider>(),
+      expenseProvider: context.read<ExpenseProvider>(),
+      todoProvider: context.read<TodoProvider>(),
+    );
+  }
+
   /// 确认记忆
   /// 将记忆状态更新为已确认，并根据类型保存到对应模块
   Future<void> _confirmMemory(Memory memory) async {
-    final memoryId = memory.id;
-    if (memoryId == null) return;
-
-    final memoryProvider = context.read<MemoryProvider>();
-    final expenseProvider = context.read<ExpenseProvider>();
-    final todoProvider = context.read<TodoProvider>();
-
     try {
-      switch (memory.type) {
-        case MemoryType.bill:
-          await memoryProvider.confirmWithRelatedRecord(
-            memoryId,
-            expense: _buildExpense(memoryId, memory.structuredData),
-          );
-          await expenseProvider.loadExpenses();
-          await expenseProvider.loadMonthlyStats(
-            expenseProvider.selectedYear,
-            expenseProvider.selectedMonth,
-          );
-          break;
-        case MemoryType.todo:
-          final todo = _buildTodo(memoryId, memory.structuredData);
-          final todoId = await memoryProvider.confirmWithRelatedRecord(
-            memoryId,
-            todo: todo,
-          );
-          await todoProvider.loadTodos();
-          if (todoId != null) {
-            await _scheduleTodoReminder(todo.copyWith(id: todoId));
-          }
-          break;
-        case MemoryType.event:
-          await memoryProvider.confirmWithRelatedRecord(
-            memoryId,
-            calendarEvent: _buildCalendarEvent(memoryId, memory.structuredData),
-          );
-          break;
-        default:
-          await memoryProvider.confirmWithRelatedRecord(memoryId);
-          break;
-      }
+      await _memoryActions().confirm(memory);
 
       if (mounted) {
         final colorScheme = Theme.of(context).colorScheme;
@@ -568,99 +536,11 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
 
   /// 忽略记忆
   Future<void> _dismissMemory(Memory memory) async {
-    final memoryId = memory.id;
-    if (memoryId == null) return;
-
-    await context.read<MemoryProvider>().updateStatus(
-      memoryId,
-      MemoryStatus.dismissed,
-    );
+    await _memoryActions().dismiss(memory);
   }
 
   /// 删除记忆
   Future<void> _deleteMemory(Memory memory) async {
-    final memoryId = memory.id;
-    if (memoryId == null) return;
-
-    final memoryProvider = context.read<MemoryProvider>();
-    final expenseProvider = context.read<ExpenseProvider>();
-    final todoProvider = context.read<TodoProvider>();
-
-    switch (memory.type) {
-      case MemoryType.bill:
-        await memoryProvider.deleteMemory(memoryId);
-        await expenseProvider.loadExpenses();
-        await expenseProvider.loadMonthlyStats(
-          expenseProvider.selectedYear,
-          expenseProvider.selectedMonth,
-        );
-        break;
-      case MemoryType.todo:
-        await todoProvider.cancelReminderForMemory(memoryId);
-        await memoryProvider.deleteMemory(memoryId);
-        await todoProvider.loadTodos();
-        break;
-      default:
-        await memoryProvider.deleteMemory(memoryId);
-        break;
-    }
-  }
-
-  /// 从记忆结构化数据中构建消费记录。
-  Expense _buildExpense(int memoryId, Map<String, dynamic> data) {
-    return Expense(
-      memoryId: memoryId,
-      amount: readAmount(data['amount']),
-      currency: data['currency']?.toString() ?? 'CNY',
-      category: data['category']?.toString() ?? '其他',
-      date: readDateTime(data['date']) ?? DateTime.now(),
-      note: data['note']?.toString(),
-    );
-  }
-
-  /// 从记忆结构化数据中构建待办事项。
-  Todo _buildTodo(int memoryId, Map<String, dynamic> data) {
-    final title = data['title']?.toString().trim();
-    return Todo(
-      memoryId: memoryId,
-      title: title == null || title.isEmpty ? '未命名待办' : title,
-      dueDate: readDateTime(data['due_date']),
-      reminder: readBool(data['reminder']),
-    );
-  }
-
-  /// 从记忆结构化数据中构建日程事件。
-  CalendarEvent _buildCalendarEvent(int memoryId, Map<String, dynamic> data) {
-    final title = data['title']?.toString().trim();
-    final startTime = readDateTime(data['start_time']) ?? DateTime.now();
-
-    return CalendarEvent(
-      memoryId: memoryId,
-      title: title == null || title.isEmpty ? '未命名日程' : title,
-      startTime: startTime,
-      endTime: readDateTime(data['end_time']),
-      location: data['location']?.toString(),
-      notes: data['notes']?.toString(),
-    );
-  }
-
-  Future<void> _scheduleTodoReminder(Todo todo) async {
-    final todoId = todo.id;
-    final dueDate = todo.dueDate;
-    if (!todo.reminder || dueDate == null || todoId == null) return;
-
-    final settings = await SettingsService.getInstance();
-    final reminderAt = dueDate.subtract(
-      Duration(minutes: settings.getDefaultReminderMinutes()),
-    );
-    try {
-      await NotificationService.instance.scheduleTodoReminder(
-        todoId: todoId,
-        title: todo.title,
-        scheduledAt: reminderAt,
-      );
-    } catch (_) {
-      // 提醒调度失败不应回滚已经保存的记忆内容。
-    }
+    await _memoryActions().delete(memory);
   }
 }
