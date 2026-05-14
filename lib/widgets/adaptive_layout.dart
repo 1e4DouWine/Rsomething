@@ -192,6 +192,7 @@ class AdaptiveSheetFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
+      bottom: false,
       child: Align(
         alignment: Alignment.bottomCenter,
         child: ConstrainedBox(

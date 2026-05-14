@@ -53,4 +53,30 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('sheet frame stays flush with the bottom edge', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    const sheetKey = Key('sheet');
+
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(
+          size: Size(400, 800),
+          padding: EdgeInsets.only(bottom: 34),
+        ),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox.expand(
+            child: AdaptiveSheetFrame(
+              child: SizedBox(key: sheetKey, height: 100, width: 400),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getBottomLeft(find.byKey(sheetKey)).dy, 800);
+  });
 }
