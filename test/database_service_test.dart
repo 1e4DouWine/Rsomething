@@ -26,6 +26,15 @@ void main() {
     await databaseService.close();
   });
 
+  test('concurrent database getters reuse one open connection', () async {
+    final databases = await Future.wait(
+      List.generate(6, (_) => databaseService.database),
+    );
+
+    final first = databases.first;
+    expect(databases.every((database) => identical(database, first)), isTrue);
+  });
+
   test('confirming an event memory writes a calendar event', () async {
     final memoryId = await databaseService.insertMemory(
       Memory(

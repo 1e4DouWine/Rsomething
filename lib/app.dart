@@ -53,12 +53,7 @@ class _MyAppState extends State<MyApp> {
       (media) {
         if (!mounted) return;
         final text = media.content;
-        final images =
-            media.attachments
-                ?.where((a) => a?.path != null)
-                .map((a) => a!.path)
-                .toList() ??
-            [];
+        final images = _extractAttachmentPaths(media);
         if (text != null || images.isNotEmpty) {
           _navigatorKey.currentState?.push(
             MaterialPageRoute(
@@ -68,6 +63,28 @@ class _MyAppState extends State<MyApp> {
           );
         }
       },
+    );
+  }
+
+  /// 提取系统分享附件中的本地文件路径。
+  ///
+  /// `share_handler` 的附件项和路径都可能为空，统一在这里过滤，避免页面构建处使用非空断言。
+  List<String> _extractAttachmentPaths(SharedMedia media) {
+    return media.attachments
+            ?.map((attachment) => attachment?.path)
+            .whereType<String>()
+            .toList() ??
+        const <String>[];
+  }
+
+  /// 根据冷启动分享内容决定首页。
+  Widget _buildHome() {
+    final initialMedia = widget.initialSharedMedia;
+    if (initialMedia == null) return const MainScreen();
+
+    return ShareReceiverScreen(
+      sharedText: initialMedia.content,
+      sharedImages: _extractAttachmentPaths(initialMedia),
     );
   }
 
@@ -99,17 +116,7 @@ class _MyAppState extends State<MyApp> {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
         // 如果有初始分享内容，直接显示分享处理页面；否则显示主页面
-        home: widget.initialSharedMedia != null
-            ? ShareReceiverScreen(
-                sharedText: widget.initialSharedMedia!.content,
-                sharedImages:
-                    widget.initialSharedMedia!.attachments
-                        ?.where((a) => a?.path != null)
-                        .map((a) => a!.path)
-                        .toList() ??
-                    [],
-              )
-            : const MainScreen(),
+        home: _buildHome(),
       ),
     );
   }

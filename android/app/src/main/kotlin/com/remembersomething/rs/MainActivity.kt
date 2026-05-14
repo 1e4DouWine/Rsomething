@@ -1,4 +1,4 @@
-package com.example.flutter_app
+package com.remembersomething.rs
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -13,6 +13,11 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * Flutter Android 主 Activity。
+ *
+ * 负责设置沉浸式状态栏，并注册分享处理状态的 MethodChannel。
+ */
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +58,12 @@ class MainActivity : FlutterActivity() {
     }
 }
 
+/**
+ * 分享分析状态通知封装。
+ *
+ * Android 16+ 支持 promoted ongoing notification 时展示系统级实时状态；
+ * 旧版本或不支持的平台能力时保持普通通知/空操作。
+ */
 private class ShareStatusNotifier(private val context: Context) {
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -62,6 +73,7 @@ private class ShareStatusNotifier(private val context: Context) {
         return canPostPromotedNotifications()
     }
 
+    /** 展示“AI 正在分析”的持续通知。 */
     fun showAnalyzing(id: Int): Boolean {
         if (!supportsLiveUpdate()) return false
 
@@ -80,6 +92,7 @@ private class ShareStatusNotifier(private val context: Context) {
         return true
     }
 
+    /** 展示“AI 分析完成”的通知。 */
     fun showComplete(id: Int, memoryType: String): Boolean {
         ensureChannel()
         val body = if (memoryType.isBlank()) {
@@ -98,6 +111,7 @@ private class ShareStatusNotifier(private val context: Context) {
         return true
     }
 
+    /** 展示“AI 分析失败”的通知。 */
     fun showFailed(id: Int, message: String): Boolean {
         ensureChannel()
         val notification = createBaseBuilder("AI 分析失败", message, "失败")
@@ -110,10 +124,12 @@ private class ShareStatusNotifier(private val context: Context) {
         return true
     }
 
+    /** 取消指定分享状态通知。 */
     fun cancel(id: Int) {
         notificationManager.cancel(id)
     }
 
+    /** 确保通知渠道存在；Android 8 以下无需渠道。 */
     private fun ensureChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
@@ -128,6 +144,7 @@ private class ShareStatusNotifier(private val context: Context) {
         notificationManager.createNotificationChannel(channel)
     }
 
+    /** 创建所有分享状态通知共用的基础 Builder。 */
     private fun createBaseBuilder(
         title: String,
         text: String,
@@ -151,6 +168,7 @@ private class ShareStatusNotifier(private val context: Context) {
             .setShortCriticalTextCompat(shortCriticalText)
     }
 
+    /** 点击通知后回到主界面。 */
     private fun contentIntent(): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             action = ACTION_OPEN_SHARE_STATUS
@@ -164,6 +182,7 @@ private class ShareStatusNotifier(private val context: Context) {
         )
     }
 
+    /** 通过反射兼容 Android 16 的 promoted notification 检查 API。 */
     private fun canPostPromotedNotifications(): Boolean {
         return try {
             val method = NotificationManager::class.java.getMethod("canPostPromotedNotifications")
@@ -173,6 +192,7 @@ private class ShareStatusNotifier(private val context: Context) {
         }
     }
 
+    /** 请求 Android 16 promoted ongoing notification 能力。 */
     private fun Notification.Builder.requestPromotedOngoing(): Notification.Builder {
         addExtras(AndroidBundle().apply {
             putBoolean("android.requestPromotedOngoing", true)
@@ -192,11 +212,12 @@ private class ShareStatusNotifier(private val context: Context) {
             )
             method.invoke(this, text)
         } catch (_: ReflectiveOperationException) {
-            // Android 16.0 devices can run without this Android 16.1 convenience API.
+            // Android 16.0 没有该 Android 16.1 便捷 API，缺失时继续使用基础通知。
         }
         return this
     }
 
+    /** 设置“分析中”的进度样式。 */
     private fun Notification.Builder.setAnalyzingProgressStyle(): Notification.Builder {
         if (Build.VERSION.SDK_INT >= 36) {
             setStyle(Notification.ProgressStyle().setProgressIndeterminate(true))
@@ -204,6 +225,7 @@ private class ShareStatusNotifier(private val context: Context) {
         return this
     }
 
+    /** 设置“已完成”的进度样式。 */
     private fun Notification.Builder.setCompleteProgressStyle(): Notification.Builder {
         if (Build.VERSION.SDK_INT >= 36) {
             setStyle(Notification.ProgressStyle().setProgress(100))
@@ -211,6 +233,7 @@ private class ShareStatusNotifier(private val context: Context) {
         return this
     }
 
+    /** 检查通知是否满足 promoted ongoing notification 的系统要求。 */
     private fun Notification.hasPromotableCharacteristics(): Boolean {
         if (Build.VERSION.SDK_INT < 36) return true
 
@@ -226,6 +249,6 @@ private class ShareStatusNotifier(private val context: Context) {
         const val DEFAULT_NOTIFICATION_ID = 220001
 
         private const val CHANNEL_ID = "rs_share_status"
-        private const val ACTION_OPEN_SHARE_STATUS = "com.example.flutter_app.OPEN_SHARE_STATUS"
+        private const val ACTION_OPEN_SHARE_STATUS = "com.remembersomething.rs.OPEN_SHARE_STATUS"
     }
 }

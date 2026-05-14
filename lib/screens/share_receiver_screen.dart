@@ -97,6 +97,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       if (!mounted) return;
 
       final aiProvider = context.read<AIProvider>();
+      final memoryProvider = context.read<MemoryProvider>();
+      final sharedText = _sharedText;
       AnalysisResult? result;
 
       if (_sharedImages.isNotEmpty) {
@@ -104,10 +106,10 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         final base64Image = await _compressImageToBase64(_sharedImages.first);
         if (!mounted) return;
         setState(() => _status = '正在分析图片内容...');
-        result = await aiProvider.analyzeImage(base64Image, text: _sharedText);
-      } else if (_sharedText != null) {
+        result = await aiProvider.analyzeImage(base64Image, text: sharedText);
+      } else if (sharedText != null) {
         // 文本分析
-        result = await aiProvider.analyzeText(_sharedText!);
+        result = await aiProvider.analyzeText(sharedText);
       }
 
       if (result != null) {
@@ -122,7 +124,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         );
 
         if (!mounted) return;
-        final memoryId = await context.read<MemoryProvider>().addMemory(memory);
+        final memoryId = await memoryProvider.addMemory(memory);
         await _notifyProcessingComplete(memoryId, memory.type);
 
         if (!mounted) return;
@@ -348,6 +350,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 构建分析结果展示区
   /// 显示识别的类型、置信度和结构化数据
   Widget _buildResultSection() {
+    final result = _result;
+    final memory = _memory;
+    if (result == null || memory == null) {
+      return const SizedBox.shrink();
+    }
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -360,12 +368,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
             Row(
               children: [
                 Icon(
-                  getTypeIcon(_memory!.type),
-                  color: getTypeColor(_memory!.type),
+                  getTypeIcon(memory.type),
+                  color: getTypeColor(memory.type),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '识别为: ${_memory!.type.label}',
+                  '识别为: ${memory.type.label}',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -381,7 +389,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '置信度: ${(_result!.confidence * 100).toInt()}%',
+                    '置信度: ${(result.confidence * 100).toInt()}%',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colorScheme.onPrimaryContainer,
                     ),
@@ -390,7 +398,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
               ],
             ),
             const Divider(),
-            ..._result!.data.entries.map(
+            ...result.data.entries.map(
               (entry) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -463,9 +471,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 确认保存记忆
   /// 更新记忆状态为已确认，并根据类型保存到对应模块（账单/待办/日程）
   Future<void> _confirmMemory() async {
-    if (_memory == null) return;
+    final memory = _memory;
+    final result = _result;
+    if (memory == null || result == null) return;
+    final memoryId = memory.id;
+    if (memoryId == null) return;
 
-    final memory = _memory!;
     final memoryProvider = context.read<MemoryProvider>();
     final expenseProvider = context.read<ExpenseProvider>();
     final todoProvider = context.read<TodoProvider>();
@@ -475,8 +486,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       switch (memory.type) {
         case MemoryType.bill:
           await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            expense: _buildExpense(memory.id!, _result!.data),
+            memoryId,
+            expense: _buildExpense(memoryId, result.data),
           );
           await expenseProvider.loadExpenses();
           await expenseProvider.loadMonthlyStats(
@@ -485,9 +496,9 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           );
           break;
         case MemoryType.todo:
-          final todo = _buildTodo(memory.id!, _result!.data);
+          final todo = _buildTodo(memoryId, result.data);
           final todoId = await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
+            memoryId,
             todo: todo,
           );
           await todoProvider.loadTodos();
@@ -497,12 +508,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           break;
         case MemoryType.event:
           await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            calendarEvent: _buildCalendarEvent(memory.id!, _result!.data),
+            memoryId,
+            calendarEvent: _buildCalendarEvent(memoryId, result.data),
           );
           break;
         default:
-          await memoryProvider.confirmWithRelatedRecord(memory.id!);
+          await memoryProvider.confirmWithRelatedRecord(memoryId);
           break;
       }
 
@@ -528,10 +539,13 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 忽略记忆
   /// 更新记忆状态为已忽略
   Future<void> _dismissMemory() async {
-    if (_memory == null) return;
+    final memory = _memory;
+    if (memory == null) return;
+    final memoryId = memory.id;
+    if (memoryId == null) return;
 
     await context.read<MemoryProvider>().updateStatus(
-      _memory!.id!,
+      memoryId,
       MemoryStatus.dismissed,
     );
 
@@ -579,20 +593,22 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   }
 
   Future<void> _scheduleTodoReminder(Todo todo) async {
-    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
+    final todoId = todo.id;
+    final dueDate = todo.dueDate;
+    if (!todo.reminder || dueDate == null || todoId == null) return;
 
     final settings = await SettingsService.getInstance();
-    final reminderAt = todo.dueDate!.subtract(
+    final reminderAt = dueDate.subtract(
       Duration(minutes: settings.getDefaultReminderMinutes()),
     );
     try {
       await NotificationService.instance.scheduleTodoReminder(
-        todoId: todo.id!,
+        todoId: todoId,
         title: todo.title,
         scheduledAt: reminderAt,
       );
     } catch (_) {
-      // Reminder scheduling must not roll back already saved content.
+      // 提醒调度失败不应回滚已经保存的记忆内容。
     }
   }
 }

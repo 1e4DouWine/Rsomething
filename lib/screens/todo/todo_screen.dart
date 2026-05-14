@@ -383,59 +383,84 @@ class _TodoScreenState extends State<TodoScreen>
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.check_circle_outline_rounded,
-                size: 56,
-                color: colorScheme.primary,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact =
+            constraints.hasBoundedHeight && constraints.maxHeight < 420;
+        final padding = isCompact
+            ? const EdgeInsets.symmetric(horizontal: 32, vertical: 24)
+            : const EdgeInsets.all(48);
+        final iconExtent = isCompact ? 96.0 : 120.0;
+        final iconSize = isCompact ? 48.0 : 56.0;
+        final largeGap = isCompact ? 20.0 : 32.0;
+        final smallGap = isCompact ? 8.0 : 12.0;
+        final minHeight = constraints.hasBoundedHeight
+            ? (constraints.maxHeight - padding.vertical).clamp(
+                0.0,
+                double.infinity,
+              )
+            : 0.0;
+
+        return SingleChildScrollView(
+          padding: padding,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: iconExtent,
+                    height: iconExtent,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.1,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: iconSize,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  SizedBox(height: largeGap),
+                  Text(
+                    '暂无待办事项',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  SizedBox(height: smallGap),
+                  Text(
+                    '点击下方按钮添加待办\n或分享取件码到 RS',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.6,
+                    ),
+                  ),
+                  SizedBox(height: largeGap),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddTodoSheet(context),
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('添加待办'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 32),
-            Text(
-              '暂无待办事项',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '点击下方按钮添加待办\n或分享取件码到 RS',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () => _showAddTodoSheet(context),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('添加待办'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -443,9 +468,10 @@ class _TodoScreenState extends State<TodoScreen>
   /// 支持滑动删除、点击查看详情、点击复选框切换完成状态
   Widget _buildTodoItem(ThemeData theme, Todo todo, TodoProvider provider) {
     final colorScheme = theme.colorScheme;
+    final dueDate = todo.dueDate;
     final isOverdue =
-        todo.dueDate != null &&
-        todo.dueDate!.isBefore(DateTime.now()) &&
+        dueDate != null &&
+        dueDate.isBefore(DateTime.now()) &&
         !todo.isCompleted;
 
     return Dismissible(
@@ -495,8 +521,11 @@ class _TodoScreenState extends State<TodoScreen>
         );
       },
       onDismissed: (direction) async {
+        final todoId = todo.id;
+        if (todoId == null) return;
+
         final memoryProvider = context.read<MemoryProvider>();
-        await provider.deleteTodo(todo.id!);
+        await provider.deleteTodo(todoId);
         await memoryProvider.loadMemories(type: memoryProvider.filterType);
       },
       child: Container(
@@ -571,7 +600,7 @@ class _TodoScreenState extends State<TodoScreen>
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        if (todo.dueDate != null) ...[
+                        if (dueDate != null) ...[
                           const SizedBox(height: 8),
                           Row(
                             children: [
@@ -584,9 +613,7 @@ class _TodoScreenState extends State<TodoScreen>
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                DateFormat(
-                                  'MM月dd日 HH:mm',
-                                ).format(todo.dueDate!),
+                                DateFormat('MM月dd日 HH:mm').format(dueDate),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: isOverdue
                                       ? colorScheme.error

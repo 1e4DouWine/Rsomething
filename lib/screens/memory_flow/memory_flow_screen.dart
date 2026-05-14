@@ -441,6 +441,9 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   /// 确认记忆
   /// 将记忆状态更新为已确认，并根据类型保存到对应模块
   Future<void> _confirmMemory(Memory memory) async {
+    final memoryId = memory.id;
+    if (memoryId == null) return;
+
     final memoryProvider = context.read<MemoryProvider>();
     final expenseProvider = context.read<ExpenseProvider>();
     final todoProvider = context.read<TodoProvider>();
@@ -449,8 +452,8 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
       switch (memory.type) {
         case MemoryType.bill:
           await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            expense: _buildExpense(memory),
+            memoryId,
+            expense: _buildExpense(memoryId, memory.structuredData),
           );
           await expenseProvider.loadExpenses();
           await expenseProvider.loadMonthlyStats(
@@ -459,9 +462,9 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           );
           break;
         case MemoryType.todo:
-          final todo = _buildTodo(memory);
+          final todo = _buildTodo(memoryId, memory.structuredData);
           final todoId = await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
+            memoryId,
             todo: todo,
           );
           await todoProvider.loadTodos();
@@ -471,12 +474,12 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           break;
         case MemoryType.event:
           await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            calendarEvent: _buildCalendarEvent(memory),
+            memoryId,
+            calendarEvent: _buildCalendarEvent(memoryId, memory.structuredData),
           );
           break;
         default:
-          await memoryProvider.confirmWithRelatedRecord(memory.id!);
+          await memoryProvider.confirmWithRelatedRecord(memoryId);
           break;
       }
 
@@ -512,21 +515,27 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
 
   /// 忽略记忆
   Future<void> _dismissMemory(Memory memory) async {
+    final memoryId = memory.id;
+    if (memoryId == null) return;
+
     await context.read<MemoryProvider>().updateStatus(
-      memory.id!,
+      memoryId,
       MemoryStatus.dismissed,
     );
   }
 
   /// 删除记忆
   Future<void> _deleteMemory(Memory memory) async {
+    final memoryId = memory.id;
+    if (memoryId == null) return;
+
     final memoryProvider = context.read<MemoryProvider>();
     final expenseProvider = context.read<ExpenseProvider>();
     final todoProvider = context.read<TodoProvider>();
 
     switch (memory.type) {
       case MemoryType.bill:
-        await memoryProvider.deleteMemory(memory.id!);
+        await memoryProvider.deleteMemory(memoryId);
         await expenseProvider.loadExpenses();
         await expenseProvider.loadMonthlyStats(
           expenseProvider.selectedYear,
@@ -534,22 +543,20 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
         );
         break;
       case MemoryType.todo:
-        await todoProvider.cancelReminderForMemory(memory.id!);
-        await memoryProvider.deleteMemory(memory.id!);
+        await todoProvider.cancelReminderForMemory(memoryId);
+        await memoryProvider.deleteMemory(memoryId);
         await todoProvider.loadTodos();
         break;
       default:
-        await memoryProvider.deleteMemory(memory.id!);
+        await memoryProvider.deleteMemory(memoryId);
         break;
     }
   }
 
   /// 从记忆结构化数据中构建消费记录。
-  Expense _buildExpense(Memory memory) {
-    final data = memory.structuredData;
-
+  Expense _buildExpense(int memoryId, Map<String, dynamic> data) {
     return Expense(
-      memoryId: memory.id!,
+      memoryId: memoryId,
       amount: readAmount(data['amount']),
       currency: data['currency']?.toString() ?? 'CNY',
       category: data['category']?.toString() ?? '其他',
@@ -559,11 +566,10 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   /// 从记忆结构化数据中构建待办事项。
-  Todo _buildTodo(Memory memory) {
-    final data = memory.structuredData;
+  Todo _buildTodo(int memoryId, Map<String, dynamic> data) {
     final title = data['title']?.toString().trim();
     return Todo(
-      memoryId: memory.id!,
+      memoryId: memoryId,
       title: title == null || title.isEmpty ? '未命名待办' : title,
       dueDate: readDateTime(data['due_date']),
       reminder: readBool(data['reminder']),
@@ -571,13 +577,12 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   /// 从记忆结构化数据中构建日程事件。
-  CalendarEvent _buildCalendarEvent(Memory memory) {
-    final data = memory.structuredData;
+  CalendarEvent _buildCalendarEvent(int memoryId, Map<String, dynamic> data) {
     final title = data['title']?.toString().trim();
     final startTime = readDateTime(data['start_time']) ?? DateTime.now();
 
     return CalendarEvent(
-      memoryId: memory.id!,
+      memoryId: memoryId,
       title: title == null || title.isEmpty ? '未命名日程' : title,
       startTime: startTime,
       endTime: readDateTime(data['end_time']),
@@ -587,20 +592,22 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   }
 
   Future<void> _scheduleTodoReminder(Todo todo) async {
-    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
+    final todoId = todo.id;
+    final dueDate = todo.dueDate;
+    if (!todo.reminder || dueDate == null || todoId == null) return;
 
     final settings = await SettingsService.getInstance();
-    final reminderAt = todo.dueDate!.subtract(
+    final reminderAt = dueDate.subtract(
       Duration(minutes: settings.getDefaultReminderMinutes()),
     );
     try {
       await NotificationService.instance.scheduleTodoReminder(
-        todoId: todo.id!,
+        todoId: todoId,
         title: todo.title,
         scheduledAt: reminderAt,
       );
     } catch (_) {
-      // Reminder scheduling must not roll back already saved content.
+      // 提醒调度失败不应回滚已经保存的记忆内容。
     }
   }
 }

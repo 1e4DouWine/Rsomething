@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/database_service.dart';
@@ -10,13 +12,13 @@ class ExpenseProvider with ChangeNotifier {
   /// 数据库服务实例
   final DatabaseService _dbService = DatabaseService();
 
-  /// 全部消费记录列表
+  /// 全部消费记录列表（内部可变，外部只读）
   List<Expense> _expenses = [];
 
   /// 当前月度消费总额
   double _monthlyTotal = 0.0;
 
-  /// 按分类统计的消费金额映射（分类名称 -> 金额）
+  /// 按分类统计的消费金额映射（分类名称 -> 金额，内部可变）
   Map<String, double> _categoryStats = {};
 
   /// 当前选中的年份
@@ -32,10 +34,12 @@ class ExpenseProvider with ChangeNotifier {
   int _expensesGeneration = 0;
   int _statsGeneration = 0;
 
-  /// 公开的状态访问器
-  List<Expense> get expenses => _expenses;
+  /// 公开的状态访问器。
+  ///
+  /// 返回只读视图，避免外部绕过 Provider 直接篡改数据。
+  List<Expense> get expenses => UnmodifiableListView(_expenses);
   double get monthlyTotal => _monthlyTotal;
-  Map<String, double> get categoryStats => _categoryStats;
+  Map<String, double> get categoryStats => UnmodifiableMapView(_categoryStats);
   int get selectedYear => _selectedYear;
   int get selectedMonth => _selectedMonth;
   String? get error => _error;

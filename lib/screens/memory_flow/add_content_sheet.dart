@@ -239,6 +239,7 @@ class _AddContentSheetState extends State<AddContentSheet>
 
     try {
       final aiProvider = context.read<AIProvider>();
+      final memoryProvider = context.read<MemoryProvider>();
       final result = await aiProvider.analyzeText(text);
 
       if (result != null && mounted) {
@@ -253,14 +254,14 @@ class _AddContentSheetState extends State<AddContentSheet>
         );
 
         // 保存到记忆列表
-        await context.read<MemoryProvider>().addMemory(memory);
+        await memoryProvider.addMemory(memory);
 
         if (!mounted) return;
-        Navigator.pop(context);
-        if (!mounted) return;
-
         final colorScheme = Theme.of(context).colorScheme;
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+
+        messenger.showSnackBar(
           SnackBar(
             content: const Text('已添加到记忆流'),
             backgroundColor: colorScheme.primary,

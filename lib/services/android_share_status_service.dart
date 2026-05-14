@@ -1,13 +1,12 @@
-import 'dart:io' show Platform;
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'permission_service.dart';
 
-/// Android-only bridge for share-processing status surfaces.
+/// Android 分享处理状态桥接服务。
 ///
-/// On Android 16+ this maps to the platform promoted ongoing notification
-/// surface used by Live Updates. Other platforms simply return false/no-op.
+/// Android 16+ 会映射到系统 Live Updates 使用的高优先级持续通知能力。
+/// 其他平台不执行平台通道调用，直接返回 false 或空操作，保证跨平台编译安全。
 class AndroidShareStatusService {
   static final AndroidShareStatusService instance =
       AndroidShareStatusService._();
@@ -18,8 +17,15 @@ class AndroidShareStatusService {
     'rs_android/share_status',
   );
 
+  /// 当前平台是否可调用 Android 专属平台通道。
+  ///
+  /// 避免直接依赖 `dart:io Platform`，否则 Web 构建阶段会因 `dart:io` 不可用而失败。
+  bool get _isAndroid =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  /// 检查当前 Android 设备是否支持分享处理状态面板。
   Future<bool> supportsLiveUpdate() async {
-    if (!Platform.isAndroid) return false;
+    if (!_isAndroid) return false;
 
     try {
       return await _channel.invokeMethod<bool>('supportsLiveUpdate') ?? false;
@@ -30,8 +36,9 @@ class AndroidShareStatusService {
     }
   }
 
+  /// 展示“正在分析”的平台状态。
   Future<bool> showAnalyzing({required int id}) async {
-    if (!Platform.isAndroid) return false;
+    if (!_isAndroid) return false;
     if (!await supportsLiveUpdate()) return false;
     if (!await PermissionService.instance.ensureNotificationPermission()) {
       return false;
@@ -47,11 +54,12 @@ class AndroidShareStatusService {
     }
   }
 
+  /// 展示“分析完成”的平台状态。
   Future<bool> showComplete({
     required int id,
     required String memoryTypeLabel,
   }) async {
-    if (!Platform.isAndroid) return false;
+    if (!_isAndroid) return false;
 
     try {
       return await _channel.invokeMethod<bool>('showComplete', {
@@ -66,8 +74,9 @@ class AndroidShareStatusService {
     }
   }
 
+  /// 展示“分析失败”的平台状态。
   Future<bool> showFailed({required int id, required String message}) async {
-    if (!Platform.isAndroid) return false;
+    if (!_isAndroid) return false;
 
     try {
       return await _channel.invokeMethod<bool>('showFailed', {
@@ -82,8 +91,9 @@ class AndroidShareStatusService {
     }
   }
 
+  /// 取消指定的分享处理状态。
   Future<void> cancel({required int id}) async {
-    if (!Platform.isAndroid) return;
+    if (!_isAndroid) return;
 
     try {
       await _channel.invokeMethod<void>('cancel', {'id': id});

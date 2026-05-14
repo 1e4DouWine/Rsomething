@@ -39,6 +39,8 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
   /// 从设置服务加载所有配置档案和当前激活项
   Future<void> _loadProfiles() async {
     final settings = await SettingsService.getInstance();
+    if (!mounted) return;
+
     setState(() {
       _profiles = settings.getProfiles();
       _activeProfileId = settings.getActiveProfileId();
@@ -52,6 +54,8 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
     final aiProvider = context.read<AIProvider>();
     final settings = await SettingsService.getInstance();
     await settings.setActiveProfileId(id);
+    if (!mounted) return;
+
     setState(() => _activeProfileId = id);
     aiProvider.updateConfig();
   }
@@ -92,6 +96,8 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
         );
       },
     );
+    if (!mounted) return;
+
     if (confirmed == true) {
       final settings = await SettingsService.getInstance();
       await settings.deleteProfile(profile.id);
@@ -103,11 +109,14 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
   /// 打开配置表单页面
   /// [profile] 不为 null 时为编辑模式，否则为新增模式
   /// 返回后自动刷新列表
-  void _openProfileForm({AiConfigProfile? profile}) {
-    Navigator.push(
+  Future<void> _openProfileForm({AiConfigProfile? profile}) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => AiProfileFormScreen(profile: profile)),
-    ).then((_) => _loadProfiles());
+    );
+    if (!mounted) return;
+
+    await _loadProfiles();
   }
 
   @override
@@ -376,11 +385,12 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
   void initState() {
     super.initState();
     // 编辑模式下预填已有配置值
-    if (_isEditing) {
-      _nameController.text = widget.profile!.name;
-      _baseUrlController.text = widget.profile!.baseUrl;
-      _apiKeyController.text = widget.profile!.apiKey;
-      _modelNameController.text = widget.profile!.modelName;
+    final profile = widget.profile;
+    if (profile != null) {
+      _nameController.text = profile.name;
+      _baseUrlController.text = profile.baseUrl;
+      _apiKeyController.text = profile.apiKey;
+      _modelNameController.text = profile.modelName;
     }
   }
 
@@ -410,12 +420,13 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
   /// 测试 AI API 连接
   /// 验证表单后发送测试请求，显示成功/失败 SnackBar
   Future<void> _testConnection() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     setState(() => _isTesting = true);
     try {
       final aiService = AIService.instance;
-      // Save current config to restore after test
+      // 测试连接会临时覆盖单例配置，结束后需要恢复原配置。
       final previousConfig = aiService.currentConfig;
       final normalizedUrl = _normalizeBaseUrl(_baseUrlController.text);
       bool success = false;
@@ -430,7 +441,7 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
 
         success = await aiService.testConnection();
       } finally {
-        // Restore previous config so the singleton isn't left with test values
+        // 避免测试配置残留在单例中影响当前已激活配置。
         if (previousConfig != null) {
           aiService.setConfig(previousConfig);
         } else {
@@ -459,16 +470,18 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
   /// 验证表单后，编辑模式更新已有档案，新增模式创建新档案
   /// 若当前编辑的是激活配置，同步刷新 AIProvider
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     setState(() => _isSaving = true);
     try {
       final settings = await SettingsService.getInstance();
       final normalizedUrl = _normalizeBaseUrl(_baseUrlController.text);
 
-      if (_isEditing) {
+      final editingProfile = widget.profile;
+      if (editingProfile != null) {
         // 编辑模式：更新已有档案
-        final updated = widget.profile!.copyWith(
+        final updated = editingProfile.copyWith(
           name: _nameController.text.trim(),
           baseUrl: normalizedUrl,
           apiKey: _apiKeyController.text.trim(),
@@ -527,6 +540,9 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                 color: colorScheme.error,
               ),
               onPressed: () async {
+                final profile = widget.profile;
+                if (profile == null) return;
+
                 // 在 await 之前获取 AIProvider 引用，避免跨 async gap 使用 context
                 final aiProvider = context.read<AIProvider>();
                 final confirmed = await showDialog<bool>(
@@ -537,7 +553,7 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     title: const Text('删除配置'),
-                    content: Text('确定要删除「${widget.profile!.name}」吗？'),
+                    content: Text('确定要删除「${profile.name}」吗？'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
@@ -561,7 +577,7 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                 );
                 if (confirmed == true && mounted) {
                   final settings = await SettingsService.getInstance();
-                  await settings.deleteProfile(widget.profile!.id);
+                  await settings.deleteProfile(profile.id);
                   // 检查 context 是否仍然可用
                   if (!context.mounted) return;
                   aiProvider.updateConfig();
@@ -588,7 +604,7 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
                     (v == null || v.trim().isEmpty) ? '请输入配置名称' : null,
               ),
               const SizedBox(height: 20),
-              // API Base URL
+              // API 基础地址
               _buildTextField(
                 controller: _baseUrlController,
                 label: 'API Base URL',

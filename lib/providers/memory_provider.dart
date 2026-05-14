@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/database_service.dart';
@@ -10,7 +12,7 @@ class MemoryProvider with ChangeNotifier {
   /// 数据库服务实例
   final DatabaseService _dbService = DatabaseService();
 
-  /// 当前记忆列表
+  /// 当前记忆列表（内部可变，外部通过只读视图访问）
   List<Memory> _memories = [];
 
   /// 当前筛选类型（null 表示显示全部）
@@ -25,8 +27,10 @@ class MemoryProvider with ChangeNotifier {
   /// 加载序号，用于忽略较早返回的异步请求结果
   int _loadGeneration = 0;
 
-  /// 公开的状态访问器
-  List<Memory> get memories => _memories;
+  /// 公开的状态访问器。
+  ///
+  /// 返回只读视图，避免 UI 层直接修改 Provider 内部状态。
+  List<Memory> get memories => UnmodifiableListView(_memories);
   MemoryType? get filterType => _filterType;
   bool get isLoading => _isLoading;
   String? get error => _error;

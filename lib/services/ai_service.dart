@@ -1,5 +1,6 @@
-import 'package:dio/dio.dart';
 import 'dart:convert';
+
+import 'package:dio/dio.dart';
 
 /// AI 分析结果数据类
 ///
@@ -25,10 +26,12 @@ class AnalysisResult {
 
   /// 从 JSON Map 创建 AnalysisResult 实例
   factory AnalysisResult.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+
     return AnalysisResult(
       action: json['action'] as String? ?? 'unknown',
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
-      data: json['data'] as Map<String, dynamic>? ?? {},
+      data: data is Map ? Map<String, dynamic>.from(data) : {},
     );
   }
 }
@@ -63,7 +66,7 @@ class AIService {
   static AIService? _instance;
 
   /// HTTP 客户端
-  late Dio _dio;
+  final Dio _dio = Dio();
 
   /// AI 配置（未设置时为 null）
   AIConfig? _config;
@@ -73,15 +76,13 @@ class AIService {
 
   /// 私有构造函数，初始化 Dio 并设置超时时间
   AIService._() {
-    _dio = Dio();
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
   }
 
   /// 获取单例实例
   static AIService get instance {
-    _instance ??= AIService._();
-    return _instance!;
+    return _instance ??= AIService._();
   }
 
   /// 设置 AI 配置
@@ -106,7 +107,8 @@ class AIService {
   /// [text] 待分析的文本
   /// 返回 [AnalysisResult]，包含动作类型和结构化数据
   Future<AnalysisResult> analyzeText(String text) async {
-    if (_config == null) {
+    final config = _config;
+    if (config == null) {
       throw Exception('AI服务未配置');
     }
 
@@ -117,7 +119,7 @@ class AIService {
       final response = await _dio.post(
         '',
         data: {
-          'model': _config!.modelName,
+          'model': config.modelName,
           'messages': [
             {'role': 'system', 'content': systemPrompt},
             {'role': 'user', 'content': userPrompt},
@@ -126,9 +128,9 @@ class AIService {
         },
       );
 
-      final content = response.data['choices'][0]['message']['content'];
+      final content = _readMessageContent(response.data);
       final jsonStr = _extractJson(content);
-      final jsonResult = json.decode(jsonStr);
+      final jsonResult = _decodeAnalysisJson(jsonStr);
       return AnalysisResult.fromJson(jsonResult);
     } on DioException catch (e) {
       throw Exception('AI分析失败: ${e.message}');
@@ -142,7 +144,8 @@ class AIService {
     String base64Image, {
     String? text,
   }) async {
-    if (_config == null) {
+    final config = _config;
+    if (config == null) {
       throw Exception('AI服务未配置');
     }
 
@@ -156,7 +159,7 @@ class AIService {
       final response = await _dio.post(
         '',
         data: {
-          'model': _config!.modelName,
+          'model': config.modelName,
           'messages': [
             {'role': 'system', 'content': systemPrompt},
             {
@@ -175,10 +178,10 @@ class AIService {
         },
       );
 
-      final content = response.data['choices'][0]['message']['content'];
+      final content = _readMessageContent(response.data);
       // 从返回内容中提取 JSON 部分（模型可能返回非 JSON 前缀文字）
       final jsonStr = _extractJson(content);
-      final jsonResult = json.decode(jsonStr);
+      final jsonResult = _decodeAnalysisJson(jsonStr);
       return AnalysisResult.fromJson(jsonResult);
     } on DioException catch (e) {
       throw Exception('AI图片分析失败: ${e.message}');
@@ -188,13 +191,14 @@ class AIService {
   /// 测试 API 连接是否正常
   /// 发送一个简单的请求验证配置是否正确
   Future<bool> testConnection() async {
-    if (_config == null) return false;
+    final config = _config;
+    if (config == null) return false;
 
     try {
       final response = await _dio.post(
         '',
         data: {
-          'model': _config!.modelName,
+          'model': config.modelName,
           'messages': [
             {'role': 'user', 'content': 'Hello'},
           ],
@@ -202,9 +206,48 @@ class AIService {
         },
       );
       return response.statusCode == 200;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
+  }
+
+  /// 从 OpenAI 兼容响应中读取模型消息文本。
+  ///
+  /// 将不符合预期的响应提前转成格式异常，避免动态索引带来的运行时类型错误。
+  String _readMessageContent(Object? responseData) {
+    if (responseData is! Map) {
+      throw const FormatException('AI 响应不是 JSON 对象');
+    }
+
+    final choices = responseData['choices'];
+    if (choices is! List || choices.isEmpty) {
+      throw const FormatException('AI 响应缺少 choices');
+    }
+
+    final firstChoice = choices.first;
+    if (firstChoice is! Map) {
+      throw const FormatException('AI 响应 choices 格式异常');
+    }
+
+    final message = firstChoice['message'];
+    if (message is! Map) {
+      throw const FormatException('AI 响应缺少 message');
+    }
+
+    final content = message['content'];
+    if (content is String && content.trim().isNotEmpty) {
+      return content;
+    }
+    throw const FormatException('AI 响应缺少有效内容');
+  }
+
+  /// 解码并校验 AI 返回的结构化 JSON。
+  Map<String, dynamic> _decodeAnalysisJson(String source) {
+    final decoded = json.decode(source);
+    if (decoded is! Map) {
+      throw const FormatException('AI 返回内容不是 JSON 对象');
+    }
+    return Map<String, dynamic>.from(decoded);
   }
 
   /// 构建系统提示词
@@ -247,7 +290,7 @@ class AIService {
     final jsonPattern = RegExp(r'\{[\s\S]*\}');
     final match = jsonPattern.firstMatch(content);
     if (match != null) {
-      return match.group(0)!;
+      return match.group(0) ?? content;
     }
     return content;
   }

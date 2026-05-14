@@ -19,6 +19,7 @@ class TodoDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final dueDate = todo.dueDate;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -57,9 +58,9 @@ class TodoDetailDialog extends StatelessWidget {
                           color: colorScheme.onSurface,
                         ),
                       ),
-                      if (todo.dueDate != null)
+                      if (dueDate != null)
                         Text(
-                          DateFormat('yyyy-MM-dd HH:mm').format(todo.dueDate!),
+                          DateFormat('yyyy-MM-dd HH:mm').format(dueDate),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -87,12 +88,12 @@ class TodoDetailDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // 截止时间详情行
-            if (todo.dueDate != null) ...[
+            if (dueDate != null) ...[
               _buildDetailRow(
                 context,
                 Icons.access_time_rounded,
                 '截止时间',
-                DateFormat('yyyy年MM月dd日 HH:mm').format(todo.dueDate!),
+                DateFormat('yyyy年MM月dd日 HH:mm').format(dueDate),
               ),
               const SizedBox(height: 12),
             ],

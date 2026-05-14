@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_app/models/ai_config_profile.dart';
 import 'package:flutter_app/services/settings_service.dart';
 
 void main() {
@@ -66,5 +69,43 @@ void main() {
     expect(first.getProfiles(), hasLength(1));
     expect(first.getActiveProfile()?.id, 'default');
     expect(first.isSilentMode(), isFalse);
+  });
+
+  test('profile api keys are stored only in secure storage', () async {
+    final service = await SettingsService.getInstance();
+
+    await service.saveProfiles([
+      AiConfigProfile(
+        id: 'custom',
+        name: '测试配置',
+        baseUrl: 'https://api.example.com/v1/chat/completions',
+        apiKey: 'secret-key',
+        modelName: 'example-model',
+      ),
+    ]);
+
+    final prefs = await SharedPreferences.getInstance();
+    final profilesJson = prefs.getString('ai_config_profiles');
+    expect(profilesJson, isNotNull);
+
+    final profiles = json.decode(profilesJson ?? '[]') as List<dynamic>;
+
+    expect(secureValues['ai_profile_api_key_custom'], 'secret-key');
+    expect(profilesJson, isNot(contains('secret-key')));
+    expect(profiles.single, isA<Map>());
+    expect(service.getProfiles().single.apiKey, 'secret-key');
+  });
+
+  test('malformed profile storage does not break initialization', () async {
+    SharedPreferences.setMockInitialValues({
+      'ai_config_profiles': '{bad json',
+      'ai_active_profile_id': 'missing',
+    });
+    SettingsService.resetForTesting();
+
+    final service = await SettingsService.getInstance();
+
+    expect(service.getProfiles(), isEmpty);
+    expect(service.getActiveProfile(), isNull);
   });
 }

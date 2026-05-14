@@ -127,8 +127,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
     return FutureBuilder<SettingsService>(
       future: SettingsService.getInstance(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-        final settings = snapshot.data!;
+        final settings = snapshot.data;
+        if (settings == null) return const SizedBox.shrink();
 
         return Container(
           decoration: BoxDecoration(
