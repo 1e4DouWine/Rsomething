@@ -11,6 +11,7 @@ import 'screens/todo/todo_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/share_receiver_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/adaptive_layout.dart';
 
 /// 应用根组件
 ///
@@ -122,7 +123,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-/// 主页面（底部导航栏容器）
+/// 主页面（自适应导航容器）
 ///
 /// 包含四个标签页：记忆流、账本、待办、我的
 /// 使用 IndexedStack 保持各页面状态
@@ -147,38 +148,89 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // 使用 IndexedStack 保持所有页面状态，避免切换时重建
-      body: IndexedStack(index: _currentIndex, children: _screens),
-      // Material 3 底部导航栏
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
-            label: '记忆流',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useNavigationRail = AdaptiveLayout.usesNavigationRail(
+          constraints.maxWidth,
+        );
+        final body = IndexedStack(index: _currentIndex, children: _screens);
+
+        if (useNavigationRail) {
+          return Scaffold(
+            body: Row(
+              children: [
+                SafeArea(
+                  child: NavigationRail(
+                    selectedIndex: _currentIndex,
+                    onDestinationSelected: (index) {
+                      setState(() => _currentIndex = index);
+                    },
+                    labelType: NavigationRailLabelType.all,
+                    destinations: const [
+                      NavigationRailDestination(
+                        icon: Icon(Icons.auto_awesome_outlined),
+                        selectedIcon: Icon(Icons.auto_awesome),
+                        label: Text('记忆流'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.receipt_long_outlined),
+                        selectedIcon: Icon(Icons.receipt_long),
+                        label: Text('账本'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.check_circle_outline),
+                        selectedIcon: Icon(Icons.check_circle),
+                        label: Text('待办'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.person_outline),
+                        selectedIcon: Icon(Icons.person),
+                        label: Text('我的'),
+                      ),
+                    ],
+                  ),
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: body),
+              ],
+            ),
+          );
+        }
+
+        return Scaffold(
+          // 使用 IndexedStack 保持所有页面状态，避免切换时重建
+          body: body,
+          // Material 3 底部导航栏
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              setState(() => _currentIndex = index);
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.auto_awesome_outlined),
+                selectedIcon: Icon(Icons.auto_awesome),
+                label: '记忆流',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long),
+                label: '账本',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.check_circle_outline),
+                selectedIcon: Icon(Icons.check_circle),
+                label: '待办',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: '我的',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: '账本',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.check_circle_outline),
-            selectedIcon: Icon(Icons.check_circle),
-            label: '待办',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: '我的',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

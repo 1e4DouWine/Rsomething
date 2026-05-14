@@ -5,6 +5,7 @@ import '../../models/ai_config_profile.dart';
 import '../../providers/ai_provider.dart';
 import '../../services/settings_service.dart';
 import '../../services/ai_service.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// AI 模型配置列表页面
 ///
@@ -182,155 +183,167 @@ class _AiModelConfigScreenState extends State<AiModelConfigScreen> {
   Widget _buildProfileList(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-      itemCount: _profiles.length,
-      itemBuilder: (context, index) {
-        final profile = _profiles[index];
-        final isActive = profile.id == _activeProfileId;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ListView.builder(
+          padding: AdaptiveLayout.listInsetsForWidth(
+            constraints.maxWidth,
+            top: 8,
+          ),
+          itemCount: _profiles.length,
+          itemBuilder: (context, index) {
+            final profile = _profiles[index];
+            final isActive = profile.id == _activeProfileId;
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _selectProfile(profile.id),
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  // 激活项使用主题色背景，否则使用默认表面色
-                  color: isActive
-                      ? colorScheme.primaryContainer.withValues(alpha: 0.3)
-                      : colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(20),
-                  // 激活项使用主题色边框
-                  border: isActive
-                      ? Border.all(color: colorScheme.primary, width: 2)
-                      : Border.all(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // AI 图标容器
-                    Container(
-                      padding: const EdgeInsets.all(12),
+            return AdaptiveContent(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _selectProfile(profile.id),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: isActive
-                            ? colorScheme.primary.withValues(alpha: 0.15)
-                            : colorScheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(14),
+                            ? colorScheme.primaryContainer.withValues(
+                                alpha: 0.3,
+                              )
+                            : colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(20),
+                        border: isActive
+                            ? Border.all(color: colorScheme.primary, width: 2)
+                            : Border.all(
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.shadow.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Icon(
-                        Icons.smart_toy_rounded,
-                        color: isActive
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // 配置信息（名称、模型、URL）
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  profile.name,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: isActive
-                                        ? colorScheme.primary
-                                        : colorScheme.onSurface,
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? colorScheme.primary.withValues(alpha: 0.15)
+                                  : colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              Icons.smart_toy_rounded,
+                              color: isActive
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        profile.name,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: isActive
+                                                  ? colorScheme.primary
+                                                  : colorScheme.onSurface,
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isActive)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.primary,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '使用中',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color: colorScheme.onPrimary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  profile.modelName,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              // "使用中"标签（仅激活项显示）
-                              if (isActive)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
+                                const SizedBox(height: 2),
+                                Text(
+                                  profile.baseUrl,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.7),
+                                    fontSize: 11,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '使用中',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: colorScheme.onPrimary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          // 模型名称
-                          Text(
-                            profile.modelName,
-                            style: theme.textTheme.bodySmall?.copyWith(
+                          const SizedBox(width: 8),
+                          PopupMenuButton<String>(
+                            icon: Icon(
+                              Icons.more_vert_rounded,
                               color: colorScheme.onSurfaceVariant,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          // API 地址
-                          Text(
-                            profile.baseUrl,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant.withValues(
-                                alpha: 0.7,
-                              ),
-                              fontSize: 11,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            overflow: TextOverflow.ellipsis,
+                            onSelected: (value) {
+                              if (value == 'edit') {
+                                _openProfileForm(profile: profile);
+                              } else if (value == 'delete') {
+                                _deleteProfile(profile);
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'edit',
+                                child: Text('编辑'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Text('删除'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // 更多操作菜单（编辑/删除）
-                    PopupMenuButton<String>(
-                      icon: Icon(
-                        Icons.more_vert_rounded,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          _openProfileForm(profile: profile);
-                        } else if (value == 'delete') {
-                          _deleteProfile(profile);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(value: 'edit', child: Text('编辑')),
-                        const PopupMenuItem(value: 'delete', child: Text('删除')),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -587,125 +600,126 @@ class _AiProfileFormScreenState extends State<AiProfileFormScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 配置名称
-              _buildTextField(
-                controller: _nameController,
-                label: '配置名称',
-                hint: '例如：OpenAI、通义千问',
-                icon: Icons.label_outline_rounded,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '请输入配置名称' : null,
-              ),
-              const SizedBox(height: 20),
-              // API 基础地址
-              _buildTextField(
-                controller: _baseUrlController,
-                label: 'API Base URL',
-                hint: 'https://api.openai.com/v1',
-                icon: Icons.link_rounded,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '请输入API地址' : null,
-              ),
-              // URL 自动补全提示
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  '提示：若URL未以 /chat/completions 结尾，系统将自动补全',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    fontSize: 12,
-                  ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: AdaptiveLayout.listInsetsForWidth(
+              constraints.maxWidth,
+              top: 8,
+            ),
+            child: AdaptiveContent(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(
+                      controller: _nameController,
+                      label: '配置名称',
+                      hint: '例如：OpenAI、通义千问',
+                      icon: Icons.label_outline_rounded,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? '请输入配置名称' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _baseUrlController,
+                      label: 'API Base URL',
+                      hint: 'https://api.openai.com/v1',
+                      icon: Icons.link_rounded,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? '请输入API地址' : null,
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        '提示：若URL未以 /chat/completions 结尾，系统将自动补全',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _apiKeyController,
+                      label: 'API Key',
+                      hint: 'sk-...',
+                      icon: Icons.key_rounded,
+                      obscureText: true,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? '请输入API Key' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _modelNameController,
+                      label: '模型名称',
+                      hint: 'gpt-4o-mini',
+                      icon: Icons.psychology_rounded,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? '请输入模型名称' : null,
+                    ),
+                    const SizedBox(height: 32),
+                    AdaptiveButtonGroup(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: _isTesting ? null : _testConnection,
+                          icon: _isTesting
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.primary,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.wifi_tethering_rounded,
+                                  size: 18,
+                                ),
+                          label: Text(_isTesting ? '测试中...' : '测试连接'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colorScheme.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            side: BorderSide(color: colorScheme.outline),
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: _isSaving ? null : _save,
+                          icon: _isSaving
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.onPrimary,
+                                  ),
+                                )
+                              : const Icon(Icons.save_rounded, size: 18),
+                          label: Text(_isSaving ? '保存中...' : '保存'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              // API Key
-              _buildTextField(
-                controller: _apiKeyController,
-                label: 'API Key',
-                hint: 'sk-...',
-                icon: Icons.key_rounded,
-                obscureText: true,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '请输入API Key' : null,
-              ),
-              const SizedBox(height: 20),
-              // 模型名称
-              _buildTextField(
-                controller: _modelNameController,
-                label: '模型名称',
-                hint: 'gpt-4o-mini',
-                icon: Icons.psychology_rounded,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '请输入模型名称' : null,
-              ),
-              const SizedBox(height: 32),
-              // 操作按钮行：测试连接 + 保存
-              Row(
-                children: [
-                  // 测试连接按钮
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _isTesting ? null : _testConnection,
-                      icon: _isTesting
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.primary,
-                              ),
-                            )
-                          : const Icon(Icons.wifi_tethering_rounded, size: 18),
-                      label: Text(_isTesting ? '测试中...' : '测试连接'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colorScheme.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        side: BorderSide(color: colorScheme.outline),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // 保存按钮
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _isSaving ? null : _save,
-                      icon: _isSaving
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.onPrimary,
-                              ),
-                            )
-                          : const Icon(Icons.save_rounded, size: 18),
-                      label: Text(_isSaving ? '保存中...' : '保存'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

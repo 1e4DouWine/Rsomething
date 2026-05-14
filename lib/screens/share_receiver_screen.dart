@@ -10,6 +10,7 @@ import '../services/ai_service.dart';
 import '../services/android_share_status_service.dart';
 import '../services/notification_service.dart';
 import '../services/settings_service.dart';
+import '../widgets/adaptive_layout.dart';
 
 /// 分享内容接收处理页面
 ///
@@ -241,25 +242,41 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           onPressed: _closeShareSurface,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSourceContent(),
-            const SizedBox(height: 24),
-            _buildStatusSection(),
-            const SizedBox(height: 24),
-            if (_result != null && _memory != null) ...[
-              _buildResultSection(),
-              const Spacer(),
-              _buildActionButtons(),
-            ] else if (!_isProcessing) ...[
-              const Spacer(),
-              _buildRetryButton(),
-            ],
-          ],
-        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = AdaptiveLayout.horizontalPaddingForWidth(
+            constraints.maxWidth,
+          );
+          final hasResult = _result != null && _memory != null;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(horizontal, 16, horizontal, 16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - 32,
+              ),
+              child: AdaptiveContent(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildSourceContent(),
+                    const SizedBox(height: 24),
+                    _buildStatusSection(),
+                    const SizedBox(height: 24),
+                    if (hasResult) ...[
+                      _buildResultSection(),
+                      const SizedBox(height: 24),
+                      _buildActionButtons(),
+                    ] else if (!_isProcessing) ...[
+                      const SizedBox(height: 24),
+                      Center(child: _buildRetryButton()),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -335,12 +352,15 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           ),
           const SizedBox(width: 12),
         ],
-        Text(
-          _status,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: _isProcessing
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
+        Flexible(
+          child: Text(
+            _status,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: _isProcessing
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ],
@@ -372,13 +392,14 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                   color: getTypeColor(memory.type),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '识别为: ${memory.type.label}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    '识别为: ${memory.type.label}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -430,27 +451,23 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   Widget _buildActionButtons() {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Row(
+    return AdaptiveButtonGroup(
+      spacing: 16,
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _dismissMemory,
-            icon: const Icon(Icons.close),
-            label: const Text('忽略'),
-            style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
-          ),
+        OutlinedButton.icon(
+          onPressed: _dismissMemory,
+          icon: const Icon(Icons.close),
+          label: const Text('忽略'),
+          style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _confirmMemory,
-            icon: const Icon(Icons.check),
-            label: const Text('确认保存'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.all(16),
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-            ),
+        ElevatedButton.icon(
+          onPressed: _confirmMemory,
+          icon: const Icon(Icons.check),
+          label: const Text('确认保存'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.all(16),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
           ),
         ),
       ],

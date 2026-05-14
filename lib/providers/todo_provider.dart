@@ -25,6 +25,9 @@ class TodoProvider with ChangeNotifier {
   /// 加载序号，用于忽略较早返回的异步请求结果
   int _loadGeneration = 0;
 
+  /// 防止重入标记
+  bool _loading = false;
+
   /// 公开的状态访问器。
   ///
   /// 返回只读视图，避免 UI 层直接修改 Provider 内部状态。
@@ -35,6 +38,9 @@ class TodoProvider with ChangeNotifier {
   /// 加载待办事项列表
   /// 根据 [showCompleted] 状态决定是否包含已完成项目
   Future<void> loadTodos() async {
+    if (_loading) return;
+    _loading = true;
+
     final generation = ++_loadGeneration;
     _error = null;
 
@@ -49,6 +55,7 @@ class TodoProvider with ChangeNotifier {
       if (generation != _loadGeneration) return;
       _error = e.toString();
     } finally {
+      _loading = false;
       if (generation == _loadGeneration) {
         notifyListeners();
       }
