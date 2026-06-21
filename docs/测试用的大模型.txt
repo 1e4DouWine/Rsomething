@@ -1,4 +1,4 @@
 base_url = https://openrouter.ai/api/v1/chat/completions
 model_name = minimax/minimax-m2.5:free
-api_key = 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
+api_key = abc123
 用OpenAI兼容协议OpenAI Compatible
