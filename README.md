@@ -116,6 +116,3 @@ flutter run
 flutter test
 ```
 
-## 版权
-
-© 2026 RS Team
