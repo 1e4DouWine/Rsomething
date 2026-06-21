@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../widgets/memory_card.dart';
+import '../../widgets/adaptive_layout.dart';
 import '../../theme/app_theme.dart';
-import '../../services/notification_service.dart';
-import '../../services/settings_service.dart';
-import '../../utils/type_helpers.dart';
+import '../../services/memory_action_service.dart';
 import 'add_content_sheet.dart';
 import 'memory_detail_dialog.dart';
 
@@ -129,77 +128,96 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '记忆流',
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                    color: colorScheme.onSurface,
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AdaptiveContent(
+          padding: AdaptiveLayout.pageInsetsForWidth(
+            constraints.maxWidth,
+            top: 16,
+            bottom: 8,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '记忆流',
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '让碎片信息变得有序',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '让碎片信息变得有序',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+              ),
+              // 搜索按钮
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.shadow.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  tooltip: '搜索记忆',
+                  icon: Icon(
+                    Icons.search_rounded,
                     color: colorScheme.onSurfaceVariant,
                   ),
+                  onPressed: _showSearchDialog,
                 ),
-              ],
-            ),
-          ),
-          // 搜索按钮
-          Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.search_rounded,
-                color: colorScheme.onSurfaceVariant,
               ),
-              onPressed: _showSearchDialog,
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   /// 构建类型筛选标签栏
   /// 水平滚动的 FilterChip 列表，支持按记忆类型筛选
+  /// 左右间距作为可滚动内容的一部分，首尾对称
   Widget _buildFilterChips(ThemeData theme) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Row(
-        children: [
-          _buildChip(theme, '全部', null),
-          const SizedBox(width: 10),
-          _buildChip(theme, '账单', MemoryType.bill),
-          const SizedBox(width: 10),
-          _buildChip(theme, '待办', MemoryType.todo),
-          const SizedBox(width: 10),
-          _buildChip(theme, '日程', MemoryType.event),
-          const SizedBox(width: 10),
-          _buildChip(theme, '摘要', MemoryType.summary),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = AdaptiveLayout.horizontalPaddingForWidth(
+          constraints.maxWidth,
+        );
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              SizedBox(width: horizontalPadding),
+              _buildChip(theme, '全部', null),
+              const SizedBox(width: 10),
+              _buildChip(theme, '账单', MemoryType.bill),
+              const SizedBox(width: 10),
+              _buildChip(theme, '待办', MemoryType.todo),
+              const SizedBox(width: 10),
+              _buildChip(theme, '日程', MemoryType.event),
+              const SizedBox(width: 10),
+              _buildChip(theme, '摘要', MemoryType.summary),
+              SizedBox(width: horizontalPadding),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -261,20 +279,29 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
           return _buildEmptyState(theme);
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-          itemCount: provider.memories.length,
-          itemBuilder: (context, index) {
-            final memory = provider.memories[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: MemoryCard(
-                memory: memory,
-                onTap: () => _showMemoryDetail(memory),
-                onConfirm: () => _confirmMemory(memory),
-                onDismiss: () => _dismissMemory(memory),
-                onDelete: () => _deleteMemory(memory),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return ListView.builder(
+              padding: AdaptiveLayout.listInsetsForWidth(
+                constraints.maxWidth,
+                top: 8,
               ),
+              itemCount: provider.memories.length,
+              itemBuilder: (context, index) {
+                final memory = provider.memories[index];
+                return AdaptiveContent(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: MemoryCard(
+                      memory: memory,
+                      onTap: () => _showMemoryDetail(memory),
+                      onConfirm: () => _confirmMemory(memory),
+                      onDismiss: () => _dismissMemory(memory),
+                      onDelete: () => _deleteMemory(memory),
+                    ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -310,61 +337,86 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.auto_awesome_outlined,
-                  size: 56,
-                  color: colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                '还没有记忆',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '点击下方按钮或分享内容到 RS\n开始你的智能记忆之旅',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.6,
-                ),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: _showAddDialog,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('添加第一条记忆'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 14,
-                  ),
-                ),
-              ),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompactHeight =
+            constraints.hasBoundedHeight && constraints.maxHeight < 420;
+        final horizontal = AdaptiveLayout.horizontalPaddingForWidth(
+          constraints.maxWidth,
+        );
+        final vertical = isCompactHeight ? 24.0 : 48.0;
+        final iconExtent = isCompactHeight ? 96.0 : 120.0;
+        final iconSize = isCompactHeight ? 48.0 : 56.0;
+        final largeGap = isCompactHeight ? 20.0 : 32.0;
+        final minHeight = constraints.hasBoundedHeight
+            ? (constraints.maxHeight - vertical * 2).clamp(0.0, double.infinity)
+            : 0.0;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontal,
+            vertical: vertical,
           ),
-        ),
-      ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Center(
+              child: AdaptiveContent(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: iconExtent,
+                      height: iconExtent,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withValues(
+                          alpha: 0.1,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome_outlined,
+                        size: iconSize,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    SizedBox(height: largeGap),
+                    Text(
+                      '还没有记忆',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '点击下方按钮或分享内容到 RS\n开始你的智能记忆之旅',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.6,
+                      ),
+                    ),
+                    SizedBox(height: largeGap),
+                    ElevatedButton.icon(
+                      onPressed: _showAddDialog,
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('添加第一条记忆'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -438,47 +490,19 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
     );
   }
 
+  MemoryActionService _memoryActions() {
+    return MemoryActionService(
+      memoryProvider: context.read<MemoryProvider>(),
+      expenseProvider: context.read<ExpenseProvider>(),
+      todoProvider: context.read<TodoProvider>(),
+    );
+  }
+
   /// 确认记忆
   /// 将记忆状态更新为已确认，并根据类型保存到对应模块
   Future<void> _confirmMemory(Memory memory) async {
-    final memoryProvider = context.read<MemoryProvider>();
-    final expenseProvider = context.read<ExpenseProvider>();
-    final todoProvider = context.read<TodoProvider>();
-
     try {
-      switch (memory.type) {
-        case MemoryType.bill:
-          await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            expense: _buildExpense(memory),
-          );
-          await expenseProvider.loadExpenses();
-          await expenseProvider.loadMonthlyStats(
-            expenseProvider.selectedYear,
-            expenseProvider.selectedMonth,
-          );
-          break;
-        case MemoryType.todo:
-          final todo = _buildTodo(memory);
-          final todoId = await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            todo: todo,
-          );
-          await todoProvider.loadTodos();
-          if (todoId != null) {
-            await _scheduleTodoReminder(todo.copyWith(id: todoId));
-          }
-          break;
-        case MemoryType.event:
-          await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            calendarEvent: _buildCalendarEvent(memory),
-          );
-          break;
-        default:
-          await memoryProvider.confirmWithRelatedRecord(memory.id!);
-          break;
-      }
+      await _memoryActions().confirm(memory);
 
       if (mounted) {
         final colorScheme = Theme.of(context).colorScheme;
@@ -512,95 +536,11 @@ class _MemoryFlowScreenState extends State<MemoryFlowScreen>
 
   /// 忽略记忆
   Future<void> _dismissMemory(Memory memory) async {
-    await context.read<MemoryProvider>().updateStatus(
-      memory.id!,
-      MemoryStatus.dismissed,
-    );
+    await _memoryActions().dismiss(memory);
   }
 
   /// 删除记忆
   Future<void> _deleteMemory(Memory memory) async {
-    final memoryProvider = context.read<MemoryProvider>();
-    final expenseProvider = context.read<ExpenseProvider>();
-    final todoProvider = context.read<TodoProvider>();
-
-    switch (memory.type) {
-      case MemoryType.bill:
-        await memoryProvider.deleteMemory(memory.id!);
-        await expenseProvider.loadExpenses();
-        await expenseProvider.loadMonthlyStats(
-          expenseProvider.selectedYear,
-          expenseProvider.selectedMonth,
-        );
-        break;
-      case MemoryType.todo:
-        await todoProvider.cancelReminderForMemory(memory.id!);
-        await memoryProvider.deleteMemory(memory.id!);
-        await todoProvider.loadTodos();
-        break;
-      default:
-        await memoryProvider.deleteMemory(memory.id!);
-        break;
-    }
-  }
-
-  /// 从记忆结构化数据中构建消费记录。
-  Expense _buildExpense(Memory memory) {
-    final data = memory.structuredData;
-
-    return Expense(
-      memoryId: memory.id!,
-      amount: readAmount(data['amount']),
-      currency: data['currency']?.toString() ?? 'CNY',
-      category: data['category']?.toString() ?? '其他',
-      date: readDateTime(data['date']) ?? DateTime.now(),
-      note: data['note']?.toString(),
-    );
-  }
-
-  /// 从记忆结构化数据中构建待办事项。
-  Todo _buildTodo(Memory memory) {
-    final data = memory.structuredData;
-    final title = data['title']?.toString().trim();
-    return Todo(
-      memoryId: memory.id!,
-      title: title == null || title.isEmpty ? '未命名待办' : title,
-      dueDate: readDateTime(data['due_date']),
-      reminder: readBool(data['reminder']),
-    );
-  }
-
-  /// 从记忆结构化数据中构建日程事件。
-  CalendarEvent _buildCalendarEvent(Memory memory) {
-    final data = memory.structuredData;
-    final title = data['title']?.toString().trim();
-    final startTime = readDateTime(data['start_time']) ?? DateTime.now();
-
-    return CalendarEvent(
-      memoryId: memory.id!,
-      title: title == null || title.isEmpty ? '未命名日程' : title,
-      startTime: startTime,
-      endTime: readDateTime(data['end_time']),
-      location: data['location']?.toString(),
-      notes: data['notes']?.toString(),
-    );
-  }
-
-  Future<void> _scheduleTodoReminder(Todo todo) async {
-    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
-
-    final settings = await SettingsService.getInstance();
-    final reminderAt = todo.dueDate!.subtract(
-      Duration(minutes: settings.getDefaultReminderMinutes()),
-    );
-    try {
-      await NotificationService.instance.scheduleTodoReminder(
-        todoId: todo.id!,
-        title: todo.title,
-        scheduledAt: reminderAt,
-      );
-    } catch (_) {
-      // Reminder scheduling must not roll back already saved content.
-    }
+    await _memoryActions().delete(memory);
   }
 }

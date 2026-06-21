@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # 本地数据库
   sqflite: ^2.3.0
@@ -52,7 +54,7 @@ dependencies:
 
   # UUID 生成
   uuid: ^4.5.1
-  flutter_secure_storage: ^10.1.0
+  flutter_secure_storage: ^10.2.0
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
   flutter_timezone: ^5.0.2

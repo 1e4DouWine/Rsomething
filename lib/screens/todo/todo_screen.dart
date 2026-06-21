@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
+import '../../widgets/adaptive_layout.dart';
 import 'add_todo_sheet.dart';
 import 'todo_detail_dialog.dart';
 
@@ -126,60 +127,68 @@ class _TodoScreenState extends State<TodoScreen>
   Widget _buildHeader(ThemeData theme, TodoProvider provider) {
     final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '待办',
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onSurface,
-                    letterSpacing: 0,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${provider.todos.where((t) => !t.isCompleted).length} 项待完成',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AdaptiveContent(
+          padding: AdaptiveLayout.pageInsetsForWidth(
+            constraints.maxWidth,
+            top: 16,
+            bottom: 8,
           ),
-          // 显示/隐藏已完成按钮
-          Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '待办',
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: colorScheme.onSurface,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${provider.todos.where((t) => !t.isCompleted).length} 项待完成',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              icon: Icon(
-                provider.showCompleted
-                    ? Icons.visibility_rounded
-                    : Icons.visibility_off_rounded,
-                color: provider.showCompleted
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
               ),
-              tooltip: provider.showCompleted ? '隐藏已完成' : '显示已完成',
-              onPressed: () => provider.toggleShowCompleted(),
-            ),
+              // 显示/隐藏已完成按钮
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.shadow.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    provider.showCompleted
+                        ? Icons.visibility_rounded
+                        : Icons.visibility_off_rounded,
+                    color: provider.showCompleted
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                  tooltip: provider.showCompleted ? '隐藏已完成' : '显示已完成',
+                  onPressed: () => provider.toggleShowCompleted(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -191,9 +200,9 @@ class _TodoScreenState extends State<TodoScreen>
     final progress = total > 0 ? completed / total : 0.0;
     final colorScheme = theme.colorScheme;
 
-    return SliverToBoxAdapter(
+    return AdaptiveSliverBox(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -238,11 +247,14 @@ class _TodoScreenState extends State<TodoScreen>
                         strokeCap: StrokeCap.round,
                       ),
                     ),
-                    Text(
-                      '${(progress * 100).toInt()}%',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.w800,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${(progress * 100).toInt()}%',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ],
@@ -261,12 +273,16 @@ class _TodoScreenState extends State<TodoScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      '$completed / $total',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '$completed / $total',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -292,9 +308,9 @@ class _TodoScreenState extends State<TodoScreen>
     final remaining = provider.todos.where((t) => !t.isCompleted).length;
     final colorScheme = theme.colorScheme;
 
-    return SliverToBoxAdapter(
+    return AdaptiveSliverBox(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -335,12 +351,16 @@ class _TodoScreenState extends State<TodoScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      '$remaining 项',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '$remaining 项',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -364,17 +384,19 @@ class _TodoScreenState extends State<TodoScreen>
   /// 空列表时显示引导页面，否则显示待办卡片列表
   Widget _buildTodoList(ThemeData theme, TodoProvider provider) {
     if (provider.todos.isEmpty) {
-      return SliverFillRemaining(child: _buildEmptyState(theme));
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyState(theme),
+      );
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final todo = provider.todos[index];
-          return _buildTodoItem(theme, todo, provider);
-        }, childCount: provider.todos.length),
-      ),
+    return AdaptiveSliverList(
+      itemCount: provider.todos.length,
+      itemSpacing: 0,
+      itemBuilder: (context, index) {
+        final todo = provider.todos[index];
+        return _buildTodoItem(theme, todo, provider);
+      },
     );
   }
 
@@ -382,27 +404,40 @@ class _TodoScreenState extends State<TodoScreen>
   /// 当没有待办事项时显示引导用户添加
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final isCompact = screenHeight < 420;
+    final horizontal = AdaptiveLayout.horizontalPaddingForWidth(screenWidth);
+    final vertical = isCompact ? 24.0 : 48.0;
+    final padding = EdgeInsets.symmetric(
+      horizontal: horizontal,
+      vertical: vertical,
+    );
+    final iconExtent = isCompact ? 96.0 : 120.0;
+    final iconSize = isCompact ? 48.0 : 56.0;
+    final largeGap = isCompact ? 20.0 : 32.0;
+    final smallGap = isCompact ? 8.0 : 12.0;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48),
+    return SingleChildScrollView(
+      padding: padding,
+      child: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: iconExtent,
+              height: iconExtent,
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.check_circle_outline_rounded,
-                size: 56,
+                size: iconSize,
                 color: colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: largeGap),
             Text(
               '暂无待办事项',
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -410,7 +445,7 @@ class _TodoScreenState extends State<TodoScreen>
                 color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: smallGap),
             Text(
               '点击下方按钮添加待办\n或分享取件码到 RS',
               textAlign: TextAlign.center,
@@ -419,7 +454,7 @@ class _TodoScreenState extends State<TodoScreen>
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: largeGap),
             ElevatedButton.icon(
               onPressed: () => _showAddTodoSheet(context),
               icon: const Icon(Icons.add_rounded),
@@ -443,9 +478,10 @@ class _TodoScreenState extends State<TodoScreen>
   /// 支持滑动删除、点击查看详情、点击复选框切换完成状态
   Widget _buildTodoItem(ThemeData theme, Todo todo, TodoProvider provider) {
     final colorScheme = theme.colorScheme;
+    final dueDate = todo.dueDate;
     final isOverdue =
-        todo.dueDate != null &&
-        todo.dueDate!.isBefore(DateTime.now()) &&
+        dueDate != null &&
+        dueDate.isBefore(DateTime.now()) &&
         !todo.isCompleted;
 
     return Dismissible(
@@ -494,10 +530,16 @@ class _TodoScreenState extends State<TodoScreen>
           ),
         );
       },
-      onDismissed: (direction) async {
-        final memoryProvider = context.read<MemoryProvider>();
-        await provider.deleteTodo(todo.id!);
-        await memoryProvider.loadMemories(type: memoryProvider.filterType);
+      onDismissed: (direction) {
+        final todoId = todo.id;
+        if (todoId == null) return;
+
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          final memoryProvider = context.read<MemoryProvider>();
+          await provider.deleteTodo(todoId);
+          await memoryProvider.loadMemories(type: memoryProvider.filterType);
+        });
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -521,36 +563,26 @@ class _TodoScreenState extends State<TodoScreen>
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  // 自定义复选框（点击切换完成状态）
-                  GestureDetector(
-                    onTap: () {
-                      provider.toggleCompletion(todo.id!, !todo.isCompleted);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: todo.isCompleted
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: todo.isCompleted
-                              ? colorScheme.primary
-                              : isOverdue
-                              ? colorScheme.error
-                              : colorScheme.outline,
-                          width: 2,
-                        ),
+                  Semantics(
+                    label: todo.isCompleted ? '标记为未完成' : '标记为已完成',
+                    checked: todo.isCompleted,
+                    child: Checkbox(
+                      value: todo.isCompleted,
+                      onChanged: (value) {
+                        final todoId = todo.id;
+                        if (todoId == null || value == null) return;
+                        provider.toggleCompletion(todoId, value);
+                      },
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: todo.isCompleted
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 18,
-                              color: colorScheme.onPrimary,
-                            )
-                          : null,
+                      side: BorderSide(
+                        color: isOverdue && !todo.isCompleted
+                            ? colorScheme.error
+                            : colorScheme.outline,
+                        width: 2,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -571,9 +603,12 @@ class _TodoScreenState extends State<TodoScreen>
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        if (todo.dueDate != null) ...[
+                        if (dueDate != null) ...[
                           const SizedBox(height: 8),
-                          Row(
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Icon(
                                 Icons.access_time_rounded,
@@ -582,11 +617,8 @@ class _TodoScreenState extends State<TodoScreen>
                                     ? colorScheme.error
                                     : colorScheme.onSurfaceVariant,
                               ),
-                              const SizedBox(width: 6),
                               Text(
-                                DateFormat(
-                                  'MM月dd日 HH:mm',
-                                ).format(todo.dueDate!),
+                                DateFormat('MM月dd日 HH:mm').format(dueDate),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: isOverdue
                                       ? colorScheme.error
@@ -594,8 +626,7 @@ class _TodoScreenState extends State<TodoScreen>
                                 ),
                               ),
                               // 过期标签
-                              if (isOverdue) ...[
-                                const SizedBox(width: 8),
+                              if (isOverdue)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -615,7 +646,6 @@ class _TodoScreenState extends State<TodoScreen>
                                     ),
                                   ),
                                 ),
-                              ],
                             ],
                           ),
                         ],

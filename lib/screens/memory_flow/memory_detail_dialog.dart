@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/type_helpers.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// 记忆详情对话框
 ///
@@ -22,108 +23,102 @@ class MemoryDetailDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final typeColor = AppTheme.getMemoryTypeColor(memory.type.value);
-    final maxDialogHeight = MediaQuery.sizeOf(context).height * 0.85;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxDialogHeight),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 头部：图标 + 类型 + 时间 + 关闭按钮
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: typeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      getTypeIcon(memory.type),
-                      color: typeColor,
-                      size: 28,
-                    ),
+      child: AdaptiveDialogFrame(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 头部：图标 + 类型 + 时间 + 关闭按钮
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: typeColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          memory.type.label,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat(
-                            'yyyy-MM-dd HH:mm',
-                          ).format(memory.createdAt),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: Icon(
+                    getTypeIcon(memory.type),
+                    color: typeColor,
+                    size: 28,
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 28),
-              Flexible(
-                child: SingleChildScrollView(
+                ),
+                const SizedBox(width: 16),
+                Expanded(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 原始内容区
-                      _buildSection(
-                        theme,
-                        '原始内容',
-                        Icons.text_snippet_outlined,
-                        memory.rawContentSummary,
+                      Text(
+                        memory.type.label,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
-                      if (memory.structuredData.isNotEmpty) ...[
-                        const SizedBox(height: 20),
-                        // AI 识别结果区
-                        _buildStructuredDataSection(theme, typeColor),
-                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat('yyyy-MM-dd HH:mm').format(memory.createdAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              // 关闭按钮
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
+                IconButton(
+                  tooltip: '关闭',
                   onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  child: const Text('关闭'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 原始内容区
+                    _buildSection(
+                      theme,
+                      '原始内容',
+                      Icons.text_snippet_outlined,
+                      memory.rawContentSummary,
+                    ),
+                    if (memory.structuredData.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      // AI 识别结果区
+                      _buildStructuredDataSection(theme, typeColor),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 28),
+            // 关闭按钮
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text('关闭'),
+              ),
+            ),
+          ],
         ),
       ),
     );

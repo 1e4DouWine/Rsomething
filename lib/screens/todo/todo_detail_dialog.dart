@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// 待办详情对话框
 ///
@@ -19,11 +20,11 @@ class TodoDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final dueDate = todo.dueDate;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      child: Padding(
-        padding: const EdgeInsets.all(28),
+      child: AdaptiveDialogFrame(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,9 +58,9 @@ class TodoDetailDialog extends StatelessWidget {
                           color: colorScheme.onSurface,
                         ),
                       ),
-                      if (todo.dueDate != null)
+                      if (dueDate != null)
                         Text(
-                          DateFormat('yyyy-MM-dd HH:mm').format(todo.dueDate!),
+                          DateFormat('yyyy-MM-dd HH:mm').format(dueDate),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -68,6 +69,7 @@ class TodoDetailDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: '关闭',
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(
                     Icons.close_rounded,
@@ -77,43 +79,52 @@ class TodoDetailDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            // 待办标题
-            Text(
-              todo.title,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 待办标题
+                    Text(
+                      todo.title,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // 截止时间详情行
+                    if (dueDate != null) ...[
+                      _buildDetailRow(
+                        context,
+                        Icons.access_time_rounded,
+                        '截止时间',
+                        DateFormat('yyyy年MM月dd日 HH:mm').format(dueDate),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    // 状态详情行
+                    _buildDetailRow(
+                      context,
+                      todo.isCompleted
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      '状态',
+                      todo.isCompleted ? '已完成' : '未完成',
+                    ),
+                    const SizedBox(height: 12),
+                    // 提醒状态详情行
+                    _buildDetailRow(
+                      context,
+                      todo.reminder
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_off_rounded,
+                      '提醒',
+                      todo.reminder ? '已开启' : '未开启',
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            // 截止时间详情行
-            if (todo.dueDate != null) ...[
-              _buildDetailRow(
-                context,
-                Icons.access_time_rounded,
-                '截止时间',
-                DateFormat('yyyy年MM月dd日 HH:mm').format(todo.dueDate!),
-              ),
-              const SizedBox(height: 12),
-            ],
-            // 状态详情行
-            _buildDetailRow(
-              context,
-              todo.isCompleted
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              '状态',
-              todo.isCompleted ? '已完成' : '未完成',
-            ),
-            const SizedBox(height: 12),
-            // 提醒状态详情行
-            _buildDetailRow(
-              context,
-              todo.reminder
-                  ? Icons.notifications_active_rounded
-                  : Icons.notifications_off_rounded,
-              '提醒',
-              todo.reminder ? '已开启' : '未开启',
             ),
             const SizedBox(height: 28),
             // 关闭按钮
@@ -152,23 +163,25 @@ class TodoDetailDialog extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
+              Text(
+                value,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurface,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

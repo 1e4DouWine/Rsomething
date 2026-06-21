@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../utils/type_helpers.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// 添加内容底部弹窗
 ///
@@ -55,159 +56,168 @@ class _AddContentSheetState extends State<AddContentSheet>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
+    final horizontalPadding = AdaptiveLayout.horizontalPaddingForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.only(
-        bottom: bottomPadding,
-        left: 24,
-        right: 24,
-        top: 12,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 顶部拖拽指示条
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colorScheme.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
+    return AdaptiveSheetFrame(
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
             ),
-          ),
-          const SizedBox(height: 24),
-          // 标题区：图标 + 标题 + 副标题
-          Row(
+          ],
+        ),
+        padding: EdgeInsets.only(
+          bottom: bottomPadding,
+          left: horizontalPadding,
+          right: horizontalPadding,
+          top: 12,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 顶部拖拽指示条
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // 标题区：图标 + 标题 + 副标题
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '添加新记忆',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'AI 将自动识别内容类型',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // 文本输入区
               Container(
-                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  color: colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: colorScheme.outline, width: 1.5),
                 ),
-                child: Icon(
-                  Icons.auto_awesome,
-                  color: colorScheme.primary,
-                  size: 24,
+                child: TextField(
+                  controller: _textController,
+                  maxLines: 5,
+                  minLines: 3,
+                  decoration: InputDecoration(
+                    hintText: '输入或粘贴内容...\n例如：今天午饭花了35元',
+                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(20),
+                  ),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '添加新记忆',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
+              const SizedBox(height: 24),
+              // 智能分析按钮（带缩放动画）
+              ScaleTransition(
+                scale: _buttonScaleAnimation,
+                child: ElevatedButton(
+                  onPressed: _isAnalyzing ? null : _analyzeContent,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    disabledBackgroundColor: colorScheme.primary.withValues(
+                      alpha: 0.6,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'AI 将自动识别内容类型',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ],
+                    elevation: _isAnalyzing ? 0 : 4,
+                    shadowColor: colorScheme.primary.withValues(alpha: 0.4),
+                  ),
+                  child: _isAnalyzing
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('AI 分析中...'),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.auto_awesome, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              '智能分析',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
-          const SizedBox(height: 24),
-          // 文本输入区
-          Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: colorScheme.outline, width: 1.5),
-            ),
-            child: TextField(
-              controller: _textController,
-              maxLines: 5,
-              minLines: 3,
-              decoration: InputDecoration(
-                hintText: '输入或粘贴内容...\n例如：今天午饭花了35元',
-                hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(20),
-              ),
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // 智能分析按钮（带缩放动画）
-          ScaleTransition(
-            scale: _buttonScaleAnimation,
-            child: ElevatedButton(
-              onPressed: _isAnalyzing ? null : _analyzeContent,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                disabledBackgroundColor: colorScheme.primary.withValues(
-                  alpha: 0.6,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: _isAnalyzing ? 0 : 4,
-                shadowColor: colorScheme.primary.withValues(alpha: 0.4),
-              ),
-              child: _isAnalyzing
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: colorScheme.onPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text('AI 分析中...'),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.auto_awesome, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          '智能分析',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }
@@ -239,6 +249,7 @@ class _AddContentSheetState extends State<AddContentSheet>
 
     try {
       final aiProvider = context.read<AIProvider>();
+      final memoryProvider = context.read<MemoryProvider>();
       final result = await aiProvider.analyzeText(text);
 
       if (result != null && mounted) {
@@ -253,14 +264,14 @@ class _AddContentSheetState extends State<AddContentSheet>
         );
 
         // 保存到记忆列表
-        await context.read<MemoryProvider>().addMemory(memory);
+        await memoryProvider.addMemory(memory);
 
         if (!mounted) return;
-        Navigator.pop(context);
-        if (!mounted) return;
-
         final colorScheme = Theme.of(context).colorScheme;
-        ScaffoldMessenger.of(context).showSnackBar(
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+
+        messenger.showSnackBar(
           SnackBar(
             content: const Text('已添加到记忆流'),
             backgroundColor: colorScheme.primary,

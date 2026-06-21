@@ -8,7 +8,7 @@ import '../services/settings_service.dart';
 /// 作为 UI 层与 AIService 之间的桥梁，处理加载状态和错误信息。
 class AIProvider with ChangeNotifier {
   /// AI 服务单例
-  final AIService _aiService = AIService.instance;
+  final AIService _aiService;
 
   /// 设置服务实例（用于读取 AI 配置）
   final SettingsService _settingsService;
@@ -25,7 +25,8 @@ class AIProvider with ChangeNotifier {
 
   /// 构造函数
   /// 初始化时自动从设置服务加载 AI 配置
-  AIProvider(this._settingsService) {
+  AIProvider(this._settingsService, {AIService? aiService})
+    : _aiService = aiService ?? AIService.instance {
     _initAIConfig();
   }
 

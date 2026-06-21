@@ -8,8 +8,10 @@ import '../providers/providers.dart';
 import '../utils/type_helpers.dart';
 import '../services/ai_service.dart';
 import '../services/android_share_status_service.dart';
+import '../services/memory_action_service.dart';
 import '../services/notification_service.dart';
 import '../services/settings_service.dart';
+import '../widgets/adaptive_layout.dart';
 
 /// 分享内容接收处理页面
 ///
@@ -97,6 +99,8 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       if (!mounted) return;
 
       final aiProvider = context.read<AIProvider>();
+      final memoryProvider = context.read<MemoryProvider>();
+      final sharedText = _sharedText;
       AnalysisResult? result;
 
       if (_sharedImages.isNotEmpty) {
@@ -104,10 +108,10 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         final base64Image = await _compressImageToBase64(_sharedImages.first);
         if (!mounted) return;
         setState(() => _status = '正在分析图片内容...');
-        result = await aiProvider.analyzeImage(base64Image, text: _sharedText);
-      } else if (_sharedText != null) {
+        result = await aiProvider.analyzeImage(base64Image, text: sharedText);
+      } else if (sharedText != null) {
         // 文本分析
-        result = await aiProvider.analyzeText(_sharedText!);
+        result = await aiProvider.analyzeText(sharedText);
       }
 
       if (result != null) {
@@ -122,7 +126,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
         );
 
         if (!mounted) return;
-        final memoryId = await context.read<MemoryProvider>().addMemory(memory);
+        final memoryId = await memoryProvider.addMemory(memory);
         await _notifyProcessingComplete(memoryId, memory.type);
 
         if (!mounted) return;
@@ -235,29 +239,46 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
       appBar: AppBar(
         title: const Text('RS 内容处理'),
         leading: IconButton(
+          tooltip: '关闭',
           icon: const Icon(Icons.close),
           onPressed: _closeShareSurface,
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSourceContent(),
-            const SizedBox(height: 24),
-            _buildStatusSection(),
-            const SizedBox(height: 24),
-            if (_result != null && _memory != null) ...[
-              _buildResultSection(),
-              const Spacer(),
-              _buildActionButtons(),
-            ] else if (!_isProcessing) ...[
-              const Spacer(),
-              _buildRetryButton(),
-            ],
-          ],
-        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontal = AdaptiveLayout.horizontalPaddingForWidth(
+            constraints.maxWidth,
+          );
+          final hasResult = _result != null && _memory != null;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(horizontal, 16, horizontal, 16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - 32,
+              ),
+              child: AdaptiveContent(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildSourceContent(),
+                    const SizedBox(height: 24),
+                    _buildStatusSection(),
+                    const SizedBox(height: 24),
+                    if (hasResult) ...[
+                      _buildResultSection(),
+                      const SizedBox(height: 24),
+                      _buildActionButtons(),
+                    ] else if (!_isProcessing) ...[
+                      const SizedBox(height: 24),
+                      Center(child: _buildRetryButton()),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -333,12 +354,15 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
           ),
           const SizedBox(width: 12),
         ],
-        Text(
-          _status,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: _isProcessing
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant,
+        Flexible(
+          child: Text(
+            _status,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: _isProcessing
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ],
@@ -348,6 +372,12 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 构建分析结果展示区
   /// 显示识别的类型、置信度和结构化数据
   Widget _buildResultSection() {
+    final result = _result;
+    final memory = _memory;
+    if (result == null || memory == null) {
+      return const SizedBox.shrink();
+    }
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -360,17 +390,18 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
             Row(
               children: [
                 Icon(
-                  getTypeIcon(_memory!.type),
-                  color: getTypeColor(_memory!.type),
+                  getTypeIcon(memory.type),
+                  color: getTypeColor(memory.type),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '识别为: ${_memory!.type.label}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    '识别为: ${memory.type.label}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -381,7 +412,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '置信度: ${(_result!.confidence * 100).toInt()}%',
+                    '置信度: ${(result.confidence * 100).toInt()}%',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colorScheme.onPrimaryContainer,
                     ),
@@ -390,7 +421,7 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
               ],
             ),
             const Divider(),
-            ..._result!.data.entries.map(
+            ...result.data.entries.map(
               (entry) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -422,27 +453,23 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   Widget _buildActionButtons() {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Row(
+    return AdaptiveButtonGroup(
+      spacing: 16,
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _dismissMemory,
-            icon: const Icon(Icons.close),
-            label: const Text('忽略'),
-            style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
-          ),
+        OutlinedButton.icon(
+          onPressed: _dismissMemory,
+          icon: const Icon(Icons.close),
+          label: const Text('忽略'),
+          style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _confirmMemory,
-            icon: const Icon(Icons.check),
-            label: const Text('确认保存'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.all(16),
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-            ),
+        ElevatedButton.icon(
+          onPressed: _confirmMemory,
+          icon: const Icon(Icons.check),
+          label: const Text('确认保存'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.all(16),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
           ),
         ),
       ],
@@ -463,48 +490,17 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 确认保存记忆
   /// 更新记忆状态为已确认，并根据类型保存到对应模块（账单/待办/日程）
   Future<void> _confirmMemory() async {
-    if (_memory == null) return;
+    final memory = _memory;
+    if (memory == null) return;
 
-    final memory = _memory!;
-    final memoryProvider = context.read<MemoryProvider>();
-    final expenseProvider = context.read<ExpenseProvider>();
-    final todoProvider = context.read<TodoProvider>();
+    final actions = MemoryActionService(
+      memoryProvider: context.read<MemoryProvider>(),
+      expenseProvider: context.read<ExpenseProvider>(),
+      todoProvider: context.read<TodoProvider>(),
+    );
 
     try {
-      // 根据记忆类型保存到对应模块。状态更新和业务记录写入在同一事务中完成。
-      switch (memory.type) {
-        case MemoryType.bill:
-          await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            expense: _buildExpense(memory.id!, _result!.data),
-          );
-          await expenseProvider.loadExpenses();
-          await expenseProvider.loadMonthlyStats(
-            expenseProvider.selectedYear,
-            expenseProvider.selectedMonth,
-          );
-          break;
-        case MemoryType.todo:
-          final todo = _buildTodo(memory.id!, _result!.data);
-          final todoId = await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            todo: todo,
-          );
-          await todoProvider.loadTodos();
-          if (todoId != null) {
-            await _scheduleTodoReminder(todo.copyWith(id: todoId));
-          }
-          break;
-        case MemoryType.event:
-          await memoryProvider.confirmWithRelatedRecord(
-            memory.id!,
-            calendarEvent: _buildCalendarEvent(memory.id!, _result!.data),
-          );
-          break;
-        default:
-          await memoryProvider.confirmWithRelatedRecord(memory.id!);
-          break;
-      }
+      await actions.confirm(memory);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -528,71 +524,17 @@ class _ShareReceiverScreenState extends State<ShareReceiverScreen> {
   /// 忽略记忆
   /// 更新记忆状态为已忽略
   Future<void> _dismissMemory() async {
-    if (_memory == null) return;
+    final memory = _memory;
+    if (memory == null) return;
 
-    await context.read<MemoryProvider>().updateStatus(
-      _memory!.id!,
-      MemoryStatus.dismissed,
-    );
+    await MemoryActionService(
+      memoryProvider: context.read<MemoryProvider>(),
+      expenseProvider: context.read<ExpenseProvider>(),
+      todoProvider: context.read<TodoProvider>(),
+    ).dismiss(memory);
 
     if (mounted) {
       await _closeShareSurface();
-    }
-  }
-
-  /// 从结构化数据构建消费记录。
-  Expense _buildExpense(int memoryId, Map<String, dynamic> data) {
-    return Expense(
-      memoryId: memoryId,
-      amount: readAmount(data['amount']),
-      currency: data['currency']?.toString() ?? 'CNY',
-      category: data['category']?.toString() ?? '其他',
-      date: readDateTime(data['date']) ?? DateTime.now(),
-      note: data['note']?.toString(),
-    );
-  }
-
-  /// 从结构化数据构建待办事项。
-  Todo _buildTodo(int memoryId, Map<String, dynamic> data) {
-    final title = data['title']?.toString().trim();
-    return Todo(
-      memoryId: memoryId,
-      title: title == null || title.isEmpty ? '未命名待办' : title,
-      dueDate: readDateTime(data['due_date']),
-      reminder: readBool(data['reminder']),
-    );
-  }
-
-  /// 从结构化数据构建日程事件。
-  CalendarEvent _buildCalendarEvent(int memoryId, Map<String, dynamic> data) {
-    final title = data['title']?.toString().trim();
-    final startTime = readDateTime(data['start_time']) ?? DateTime.now();
-
-    return CalendarEvent(
-      memoryId: memoryId,
-      title: title == null || title.isEmpty ? '未命名日程' : title,
-      startTime: startTime,
-      endTime: readDateTime(data['end_time']),
-      location: data['location']?.toString(),
-      notes: data['notes']?.toString(),
-    );
-  }
-
-  Future<void> _scheduleTodoReminder(Todo todo) async {
-    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
-
-    final settings = await SettingsService.getInstance();
-    final reminderAt = todo.dueDate!.subtract(
-      Duration(minutes: settings.getDefaultReminderMinutes()),
-    );
-    try {
-      await NotificationService.instance.scheduleTodoReminder(
-        todoId: todo.id!,
-        title: todo.title,
-        scheduledAt: reminderAt,
-      );
-    } catch (_) {
-      // Reminder scheduling must not roll back already saved content.
     }
   }
 }

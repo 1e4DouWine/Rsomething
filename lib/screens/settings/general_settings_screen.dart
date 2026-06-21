@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/settings_service.dart';
+import '../../widgets/adaptive_layout.dart';
 import 'ai_model_config_screen.dart';
 
 /// 通用设置页面
@@ -26,15 +27,24 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
         title: const Text('设置'),
         backgroundColor: colorScheme.surface,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        child: Column(
-          children: [
-            _buildAiConfigEntry(theme),
-            const SizedBox(height: 12),
-            _buildShareSettings(theme),
-          ],
-        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: AdaptiveLayout.listInsetsForWidth(
+              constraints.maxWidth,
+              top: 8,
+            ),
+            child: AdaptiveContent(
+              child: Column(
+                children: [
+                  _buildAiConfigEntry(theme),
+                  const SizedBox(height: 12),
+                  _buildShareSettings(theme),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -127,8 +137,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
     return FutureBuilder<SettingsService>(
       future: SettingsService.getInstance(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-        final settings = snapshot.data!;
+        final settings = snapshot.data;
+        if (settings == null) return const SizedBox.shrink();
 
         return Container(
           decoration: BoxDecoration(
@@ -327,39 +337,45 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 拖拽指示条
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colorScheme.outline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        return AdaptiveSheetFrame(
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
               ),
-              const SizedBox(height: 24),
-              Text(
-                '选择提醒时间',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 拖拽指示条
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    '选择提醒时间',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTimeOption(context, '提前 15 分钟', 15),
+                  _buildTimeOption(context, '提前 30 分钟', 30),
+                  _buildTimeOption(context, '提前 1 小时', 60),
+                  _buildTimeOption(context, '提前 2 小时', 120),
+                  _buildTimeOption(context, '提前 1 天', 1440),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 24),
-              _buildTimeOption(context, '提前 15 分钟', 15),
-              _buildTimeOption(context, '提前 30 分钟', 30),
-              _buildTimeOption(context, '提前 1 小时', 60),
-              _buildTimeOption(context, '提前 2 小时', 120),
-              _buildTimeOption(context, '提前 1 天', 1440),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         );
       },

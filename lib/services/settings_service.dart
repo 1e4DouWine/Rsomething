@@ -59,8 +59,7 @@ class SettingsService {
     final existing = _instance;
     if (existing != null) return existing;
 
-    _initializing ??= _initializeInstance();
-    return _initializing!;
+    return _initializing ??= _initializeInstance();
   }
 
   static Future<SettingsService> _initializeInstance() async {
@@ -91,28 +90,49 @@ class SettingsService {
     if (profilesJson != null && profilesJson.isNotEmpty) return;
 
     // 读取旧版单配置，创建为"默认配置"档案
-    final existingApiKey = getApiKey();
+    final legacyApiKey = _prefs.getString(_keyApiKey) ?? '';
     final profile = AiConfigProfile(
       id: 'default',
       name: '默认配置',
       baseUrl: getBaseUrl(),
-      apiKey: existingApiKey,
+      apiKey: '',
       modelName: getModelName(),
     );
-    await _prefs.setString(_keyAiProfiles, json.encode([profile.toJson()]));
+    await _prefs.setString(_keyAiProfiles, json.encode([profile.toMap()]));
     await _prefs.setString(_keyActiveProfileId, 'default');
+    if (legacyApiKey.isNotEmpty) {
+      await _writeSecureApiKey(profile.id, legacyApiKey);
+      await _prefs.remove(_keyApiKey);
+    }
   }
 
   /// 将旧版明文 API Key 迁移到系统安全存储，并从 SharedPreferences 中移除。
   Future<void> _migrateApiKeysToSecureStorage() async {
     final legacyApiKey = _prefs.getString(_keyApiKey) ?? '';
     final profiles = _readProfilesFromPrefs();
-    if (profiles.isEmpty) return;
+    if (profiles.isEmpty) {
+      if (legacyApiKey.isNotEmpty) {
+        final profile = AiConfigProfile(
+          id: 'default',
+          name: '默认配置',
+          baseUrl: getBaseUrl(),
+          apiKey: legacyApiKey,
+          modelName: getModelName(),
+        );
+        await saveProfiles([profile]);
+        await setActiveProfileId(profile.id);
+        await _prefs.remove(_keyApiKey);
+      }
+      return;
+    }
 
     final hasPlainTextProfileKey = profiles.any(
       (profile) => profile.apiKey.isNotEmpty,
     );
-    if (legacyApiKey.isEmpty && !hasPlainTextProfileKey) return;
+    if (legacyApiKey.isEmpty && !hasPlainTextProfileKey) {
+      await _prefs.remove(_keyApiKey);
+      return;
+    }
 
     final migratedProfiles = <AiConfigProfile>[];
     for (final profile in profiles) {
@@ -168,18 +188,39 @@ class SettingsService {
     final profilesJson = _prefs.getString(_keyAiProfiles);
     if (profilesJson == null || profilesJson.isEmpty) return [];
 
-    final decoded = json.decode(profilesJson);
-    if (decoded is! List) return [];
+    try {
+      final decoded = json.decode(profilesJson);
+      if (decoded is! List) return [];
 
-    final profiles = <AiConfigProfile>[];
-    for (final item in decoded) {
-      if (item is String) {
-        profiles.add(AiConfigProfile.fromJson(item));
-      } else if (item is Map) {
-        profiles.add(AiConfigProfile.fromMap(Map<String, dynamic>.from(item)));
+      final profiles = <AiConfigProfile>[];
+      for (final item in decoded) {
+        final profile = _tryReadProfile(item);
+        if (profile != null) profiles.add(profile);
       }
+      return profiles;
+    } on FormatException {
+      return [];
+    } on TypeError {
+      return [];
     }
-    return profiles;
+  }
+
+  /// 安全解析单份配置档案。
+  ///
+  /// 兼容旧版“JSON 字符串列表”和新版“Map 列表”两种存储格式；
+  /// 单条损坏数据会被跳过，避免整个设置页无法打开。
+  AiConfigProfile? _tryReadProfile(Object? item) {
+    try {
+      if (item is String) {
+        return AiConfigProfile.fromJson(item);
+      }
+      if (item is Map) {
+        return AiConfigProfile.fromMap(Map<String, dynamic>.from(item));
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
   }
 
   // ==================== 多配置管理 ====================
@@ -211,7 +252,7 @@ class SettingsService {
 
     await _prefs.setString(
       _keyAiProfiles,
-      json.encode(sanitizedProfiles.map((p) => p.toJson()).toList()),
+      json.encode(sanitizedProfiles.map((p) => p.toMap()).toList()),
     );
   }
 
@@ -232,11 +273,8 @@ class SettingsService {
     final activeId = getActiveProfileId();
     if (profiles.isEmpty) return null;
     if (activeId == null) return profiles.first;
-    try {
-      return profiles.firstWhere((p) => p.id == activeId);
-    } catch (_) {
-      return profiles.first;
-    }
+    final activeProfiles = profiles.where((p) => p.id == activeId);
+    return activeProfiles.isEmpty ? profiles.first : activeProfiles.first;
   }
 
   /// 添加一份新的配置档案
@@ -288,7 +326,7 @@ class SettingsService {
   String getApiKey() {
     final active = getActiveProfile();
     if (active != null) return active.apiKey;
-    return _prefs.getString(_keyApiKey) ?? _defaultApiKey;
+    return _defaultApiKey;
   }
 
   /// 设置 API Key
@@ -299,7 +337,16 @@ class SettingsService {
       return;
     }
 
-    await _prefs.setString(_keyApiKey, key);
+    final profile = AiConfigProfile(
+      id: 'default',
+      name: '默认配置',
+      baseUrl: getBaseUrl(),
+      apiKey: key,
+      modelName: getModelName(),
+    );
+    await saveProfiles([profile]);
+    await setActiveProfileId(profile.id);
+    await _prefs.remove(_keyApiKey);
   }
 
   /// 获取模型名称

@@ -14,6 +14,11 @@ class DatabaseService {
   /// 数据库实例（单例缓存）
   static Database? _database;
 
+  /// 正在打开的数据库连接。
+  ///
+  /// 多个 Provider 首次并发读取数据库时复用同一个初始化任务，避免重复打开连接。
+  static Future<Database>? _openingDatabase;
+
   /// 数据库文件名
   static const String _dbName = 'rs_database.db';
 
@@ -23,15 +28,25 @@ class DatabaseService {
   /// 获取数据库实例（懒加载模式）
   /// 如果已初始化则直接返回，否则执行初始化
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    final existing = _database;
+    if (existing != null) return existing;
+
+    final opening = _openingDatabase ??= _initDatabase();
+    try {
+      final database = await opening;
+      _database = database;
+      return database;
+    } finally {
+      if (identical(_openingDatabase, opening)) {
+        _openingDatabase = null;
+      }
+    }
   }
 
   /// 初始化数据库
   /// 获取数据库文件路径并打开连接，首次创建时触发 [_onCreate]
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), _dbName);
+    final path = join(await getDatabasesPath(), _dbName);
     return await openDatabase(
       path,
       version: _dbVersion,
@@ -299,8 +314,8 @@ class DatabaseService {
       [startDate, endDate],
     );
 
-    Map<String, double> categoryMap = {};
-    for (var row in result) {
+    final categoryMap = <String, double>{};
+    for (final row in result) {
       categoryMap[row['category'] as String] = (row['total'] as num).toDouble();
     }
     return categoryMap;
@@ -429,8 +444,8 @@ class DatabaseService {
       GROUP BY type
     ''');
 
-    Map<MemoryType, int> stats = {};
-    for (var row in result) {
+    final stats = <MemoryType, int>{};
+    for (final row in result) {
       stats[MemoryType.fromString(row['type'] as String)] = row['count'] as int;
     }
     return stats;
@@ -452,10 +467,20 @@ class DatabaseService {
   ///
   /// 主要用于测试隔离，也可在需要显式释放数据库连接时调用。
   Future<void> close() async {
+    final opening = _openingDatabase;
+    if (opening != null) {
+      final db = await opening;
+      await db.close();
+      _database = null;
+      _openingDatabase = null;
+      return;
+    }
+
     final db = _database;
     if (db == null) return;
 
     await db.close();
     _database = null;
+    _openingDatabase = null;
   }
 }

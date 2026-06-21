@@ -5,6 +5,7 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/notification_service.dart';
 import '../../services/settings_service.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// 添加待办底部弹窗
 ///
@@ -36,136 +37,147 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final selectedDate = _selectedDate;
+    final horizontalPadding = AdaptiveLayout.horizontalPaddingForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 24,
-        right: 24,
-        top: 12,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 顶部拖拽指示条
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colorScheme.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // 标题区
-          Row(
+    return AdaptiveSheetFrame(
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+          left: horizontalPadding,
+          right: horizontalPadding,
+          top: 12,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 顶部拖拽指示条
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // 标题区
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.1,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    '添加待办',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // 待办标题输入框
+              TextField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: '输入待办事项...',
+                  prefixIcon: Icon(
+                    Icons.edit_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              // 截止日期选择器
               Container(
-                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                  color: colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: colorScheme.primary,
-                  size: 24,
+                child: ListTile(
+                  leading: Icon(
+                    Icons.calendar_today_rounded,
+                    color: selectedDate != null
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(
+                    selectedDate != null
+                        ? DateFormat('yyyy年MM月dd日 HH:mm').format(selectedDate)
+                        : '设置截止时间（可选）',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: selectedDate != null
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  trailing: selectedDate != null
+                      ? IconButton(
+                          tooltip: '清除提醒时间',
+                          icon: Icon(
+                            Icons.clear_rounded,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: () {
+                            setState(() => _selectedDate = null);
+                          },
+                        )
+                      : null,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  onTap: () => _pickDateTime(context),
                 ),
               ),
-              const SizedBox(width: 16),
-              Text(
-                '添加待办',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
+              const SizedBox(height: 24),
+              // 添加按钮
+              ElevatedButton(
+                onPressed: _addTodo,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 4,
+                  shadowColor: colorScheme.primary.withValues(alpha: 0.4),
+                ),
+                child: Text(
+                  '添加待办',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
-          const SizedBox(height: 24),
-          // 待办标题输入框
-          TextField(
-            controller: _titleController,
-            decoration: InputDecoration(
-              hintText: '输入待办事项...',
-              prefixIcon: Icon(
-                Icons.edit_rounded,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            autofocus: true,
-          ),
-          const SizedBox(height: 16),
-          // 截止日期选择器
-          Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              leading: Icon(
-                Icons.calendar_today_rounded,
-                color: _selectedDate != null
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-              ),
-              title: Text(
-                _selectedDate != null
-                    ? DateFormat('yyyy年MM月dd日 HH:mm').format(_selectedDate!)
-                    : '设置截止时间（可选）',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: _selectedDate != null
-                      ? colorScheme.onSurface
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-              trailing: _selectedDate != null
-                  ? IconButton(
-                      icon: Icon(
-                        Icons.clear_rounded,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: () {
-                        setState(() => _selectedDate = null);
-                      },
-                    )
-                  : null,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              onTap: () => _pickDateTime(context),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // 添加按钮
-          ElevatedButton(
-            onPressed: _addTodo,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 4,
-              shadowColor: colorScheme.primary.withValues(alpha: 0.4),
-            ),
-            child: Text(
-              '添加待办',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }
@@ -243,6 +255,8 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
       return;
     }
 
+    final selectedDate = _selectedDate;
+
     // 创建关联的 Memory 记录
     final memory = Memory(
       type: MemoryType.todo,
@@ -250,13 +264,13 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
       rawContentSummary: title,
       structuredData: {
         'title': title,
-        if (_selectedDate != null) 'due_date': _selectedDate!.toIso8601String(),
+        if (selectedDate != null) 'due_date': selectedDate.toIso8601String(),
         'reminder': true,
       },
       status: MemoryStatus.confirmed,
     );
 
-    final todo = Todo(memoryId: 0, title: title, dueDate: _selectedDate);
+    final todo = Todo(memoryId: 0, title: title, dueDate: selectedDate);
 
     final memoryProvider = context.read<MemoryProvider>();
     final todoProvider = context.read<TodoProvider>();
@@ -269,20 +283,22 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
   }
 
   Future<void> _scheduleTodoReminder(Todo todo) async {
-    if (!todo.reminder || todo.dueDate == null || todo.id == null) return;
+    final todoId = todo.id;
+    final dueDate = todo.dueDate;
+    if (!todo.reminder || dueDate == null || todoId == null) return;
 
     final settings = await SettingsService.getInstance();
-    final reminderAt = todo.dueDate!.subtract(
+    final reminderAt = dueDate.subtract(
       Duration(minutes: settings.getDefaultReminderMinutes()),
     );
     try {
       await NotificationService.instance.scheduleTodoReminder(
-        todoId: todo.id!,
+        todoId: todoId,
         title: todo.title,
         scheduledAt: reminderAt,
       );
     } catch (_) {
-      // Reminder scheduling must not block the todo from being saved.
+      // 提醒调度失败不应阻塞待办保存。
     }
   }
 }

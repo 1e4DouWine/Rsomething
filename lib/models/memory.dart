@@ -180,7 +180,7 @@ class Memory {
         return decoded;
       }
       return {};
-    } catch (e) {
+    } catch (_) {
       return {};
     }
   }

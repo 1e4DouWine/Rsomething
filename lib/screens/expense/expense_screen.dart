@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/providers.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// 账本页面
 ///
@@ -114,46 +115,54 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   Widget _buildHeader(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '账本',
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '追踪你的每一笔消费',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AdaptiveContent(
+          padding: AdaptiveLayout.pageInsetsForWidth(
+            constraints.maxWidth,
+            top: 16,
+            bottom: 8,
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.billColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              Icons.receipt_long_rounded,
-              color: AppTheme.billColor,
-              size: 24,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '账本',
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '追踪你的每一笔消费',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.billColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  color: AppTheme.billColor,
+                  size: 24,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -162,85 +171,100 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   Widget _buildMonthSelector(ThemeData theme, ExpenseProvider provider) {
     final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AdaptiveContent(
+          padding: EdgeInsets.symmetric(
+            horizontal: AdaptiveLayout.horizontalPaddingForWidth(
+              constraints.maxWidth,
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // 上个月按钮
-            IconButton(
-              onPressed: () {
-                int year = provider.selectedYear;
-                int month = provider.selectedMonth - 1;
-                if (month < 1) {
-                  month = 12;
-                  year--;
-                }
-                provider.changeMonth(year, month);
-              },
-              icon: Icon(
-                Icons.chevron_left_rounded,
-                color: colorScheme.onSurfaceVariant,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surfaceContainerLow,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            vertical: 12,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-              ),
+              ],
             ),
-            // 当前年月显示（带动画切换效果）
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                '${provider.selectedYear}年${provider.selectedMonth}月',
-                key: ValueKey(
-                  '${provider.selectedYear}-${provider.selectedMonth}',
+            child: Row(
+              children: [
+                // 上个月按钮
+                IconButton(
+                  tooltip: '上个月',
+                  onPressed: () {
+                    int year = provider.selectedYear;
+                    int month = provider.selectedMonth - 1;
+                    if (month < 1) {
+                      month = 12;
+                      year--;
+                    }
+                    provider.changeMonth(year, month);
+                  },
+                  icon: Icon(
+                    Icons.chevron_left_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colorScheme.surfaceContainerLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
+                // 当前年月显示（带动画切换效果）
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: FittedBox(
+                      key: ValueKey(
+                        '${provider.selectedYear}-${provider.selectedMonth}',
+                      ),
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${provider.selectedYear}年${provider.selectedMonth}月',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // 下个月按钮
+                IconButton(
+                  tooltip: '下个月',
+                  onPressed: () {
+                    int year = provider.selectedYear;
+                    int month = provider.selectedMonth + 1;
+                    if (month > 12) {
+                      month = 1;
+                      year++;
+                    }
+                    provider.changeMonth(year, month);
+                  },
+                  icon: Icon(
+                    Icons.chevron_right_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colorScheme.surfaceContainerLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            // 下个月按钮
-            IconButton(
-              onPressed: () {
-                int year = provider.selectedYear;
-                int month = provider.selectedMonth + 1;
-                if (month > 12) {
-                  month = 1;
-                  year++;
-                }
-                provider.changeMonth(year, month);
-              },
-              icon: Icon(
-                Icons.chevron_right_rounded,
-                color: colorScheme.onSurfaceVariant,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surfaceContainerLow,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -256,74 +280,85 @@ class _ExpenseScreenState extends State<ExpenseScreen>
           begin: const Offset(0, 0.2),
           end: Offset.zero,
         ).animate(_headerAnimation),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.primary.withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return AdaptiveContent(
+              padding: AdaptiveLayout.pageInsetsForWidth(
+                constraints.maxWidth,
+                top: 8,
+                bottom: 24,
               ),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '本月支出',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: colorScheme.onPrimary.withValues(alpha: 0.8),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.primary.withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                // 金额数字滚动动画
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: provider.monthlyTotal),
-                  duration: const Duration(milliseconds: 1200),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Text(
-                      '¥${value.toStringAsFixed(2)}',
-                      style: theme.textTheme.displayMedium?.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -2,
-                      ),
-                    );
-                  },
-                ),
-                // 分类统计饼图标签（仅在有数据时显示）
-                if (provider.categoryStats.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Container(
-                    height: 1,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          colorScheme.onPrimary.withValues(alpha: 0.3),
-                          Colors.transparent,
-                        ],
+                child: Column(
+                  children: [
+                    Text(
+                      '本月支出',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onPrimary.withValues(alpha: 0.8),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildCategoryStats(theme, provider),
-                ],
-              ],
-            ),
-          ),
+                    const SizedBox(height: 12),
+                    // 金额数字滚动动画
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: provider.monthlyTotal),
+                      duration: const Duration(milliseconds: 1200),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '¥${value.toStringAsFixed(2)}',
+                            style: theme.textTheme.displayMedium?.copyWith(
+                              color: colorScheme.onPrimary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    // 分类统计饼图标签（仅在有数据时显示）
+                    if (provider.categoryStats.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              colorScheme.onPrimary.withValues(alpha: 0.3),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildCategoryStats(theme, provider),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -382,99 +417,122 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
     final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AdaptiveContent(
+          padding: AdaptiveLayout.pageInsetsForWidth(
+            constraints.maxWidth,
+            top: 0,
+            bottom: 24,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '消费分类',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...provider.categoryStats.entries.map((entry) {
-              final color = AppTheme.getCategoryColor(entry.key);
-              final total = provider.monthlyTotal;
-              final percentage = total > 0 ? (entry.value / total * 100) : 0;
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '消费分类',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...provider.categoryStats.entries.map((entry) {
+                  final color = AppTheme.getCategoryColor(entry.key);
+                  final total = provider.monthlyTotal;
+                  final percentage = total > 0
+                      ? (entry.value / total * 100)
+                      : 0;
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    // 分类图标
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        _getCategoryIcon(entry.key),
-                        color: color,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 分类名称和金额
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        // 分类图标
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            _getCategoryIcon(entry.key),
+                            color: color,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                entry.key,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              // 分类名称和金额
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    entry.key,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Flexible(
+                                    child: Text(
+                                      '¥${entry.value.toStringAsFixed(2)}',
+                                      textAlign: TextAlign.end,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '¥${entry.value.toStringAsFixed(2)}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: colorScheme.onSurface,
+                              const SizedBox(height: 8),
+                              // 占比进度条
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: percentage / 100,
+                                  backgroundColor: color.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    color,
+                                  ),
+                                  minHeight: 6,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          // 占比进度条
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: percentage / 100,
-                              backgroundColor: color.withValues(alpha: 0.12),
-                              valueColor: AlwaysStoppedAnimation<Color>(color),
-                              minHeight: 6,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -484,25 +542,36 @@ class _ExpenseScreenState extends State<ExpenseScreen>
     final colorScheme = theme.colorScheme;
 
     if (provider.expenses.isEmpty) {
+      final screenWidth = MediaQuery.sizeOf(context).width;
+      final screenHeight = MediaQuery.sizeOf(context).height;
+      final isCompactHeight = screenHeight < 420;
+      final horizontal = AdaptiveLayout.horizontalPaddingForWidth(screenWidth);
+      final vertical = isCompactHeight ? 24.0 : 48.0;
+      final iconExtent = isCompactHeight ? 84.0 : 100.0;
+      final iconSize = isCompactHeight ? 40.0 : 48.0;
+
       return SliverFillRemaining(
         hasScrollBody: false,
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(48),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontal,
+              vertical: vertical,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: iconExtent,
+                  height: iconExtent,
                   decoration: BoxDecoration(
                     color: AppTheme.billColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.receipt_long_outlined,
-                    size: 48,
+                    size: iconSize,
                     color: AppTheme.billColor,
                   ),
                 ),
@@ -530,82 +599,83 @@ class _ExpenseScreenState extends State<ExpenseScreen>
       );
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final expense = provider.expenses[index];
-          final color = AppTheme.getCategoryColor(expense.category);
+    return AdaptiveSliverList(
+      itemCount: provider.expenses.length,
+      itemBuilder: (context, index) {
+        final expense = provider.expenses[index];
+        final color = AppTheme.getCategoryColor(expense.category);
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.shadow.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              child: Row(
-                children: [
-                  // 分类图标
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      _getCategoryIcon(expense.category),
-                      color: color,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // 备注/分类名称和日期
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          expense.note ?? expense.category,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('MM月dd日').format(expense.date),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // 金额
-                  Text(
-                    '¥${expense.amount.toStringAsFixed(2)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
+            ],
+          ),
+          child: Row(
+            children: [
+              // 分类图标
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  _getCategoryIcon(expense.category),
+                  color: color,
+                  size: 24,
+                ),
               ),
-            ),
-          );
-        }, childCount: provider.expenses.length),
-      ),
+              const SizedBox(width: 16),
+              // 备注/分类名称和日期
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      expense.note ?? expense.category,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('MM月dd日').format(expense.date),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 金额
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 132),
+                child: Text(
+                  '¥${expense.amount.toStringAsFixed(2)}',
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

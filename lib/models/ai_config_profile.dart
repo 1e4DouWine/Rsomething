@@ -12,16 +12,16 @@ class AiConfigProfile {
   final String id;
 
   /// 配置显示名称（如"OpenAI"、"通义千问"）
-  String name;
+  final String name;
 
   /// API 请求地址（应以 /chat/completions 结尾）
-  String baseUrl;
+  final String baseUrl;
 
   /// API 认证密钥
-  String apiKey;
+  final String apiKey;
 
   /// 使用的 LLM 模型名称
-  String modelName;
+  final String modelName;
 
   AiConfigProfile({
     required this.id,
@@ -56,9 +56,16 @@ class AiConfigProfile {
   /// 转换为 JSON 字符串
   String toJson() => json.encode(toMap());
 
-  /// 从 JSON 字符串创建实例
-  factory AiConfigProfile.fromJson(String source) =>
-      AiConfigProfile.fromMap(json.decode(source) as Map<String, dynamic>);
+  /// 从 JSON 字符串创建实例。
+  ///
+  /// 先校验顶层结构，避免错误格式在强制类型转换时产生难以定位的异常。
+  factory AiConfigProfile.fromJson(String source) {
+    final decoded = json.decode(source);
+    if (decoded is! Map) {
+      throw const FormatException('AI 配置 JSON 必须是对象');
+    }
+    return AiConfigProfile.fromMap(Map<String, dynamic>.from(decoded));
+  }
 
   /// 创建副本，可选择性覆盖指定字段
   AiConfigProfile copyWith({
